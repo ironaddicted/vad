@@ -622,7 +622,8 @@
         fetch('https://htmczrw2tgityftpxj5535hdye0zreqf.lambda-url.us-east-1.on.aws', {
           method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+			'Access-Control-Allow-Origin': '*'
           },
           body: JSON.stringify(formData)
         })
