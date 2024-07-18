@@ -2,23 +2,13 @@
 <html lang="en">
     <head>
 	<!-- Google tag (gtag.js) -->
-<!--<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16582460982"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16582460982"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
   gtag('config', 'AW-16582460982');
-</script>-->
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16646135321">
-</script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-16646135321');
 </script>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -660,6 +650,13 @@
 
     // Function to handle form submission
     function handleSubmit(event) {
+	
+	gtag('event', 'conversion', {
+      'send_to': 'AW-16582460982/cr4VCNeZ2bMZELaMkeM9',
+      'value': 1.0,
+      'currency': 'USD'
+  });
+	
       event.preventDefault(); // Prevent default form submission
       if (validateForm()) {
         // Prepare data for submission
