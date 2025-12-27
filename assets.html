@@ -3,46 +3,55 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gold & Silver Holdings Value (Live + History)</title>
+  <title>Gold & Silver Portfolio (Live + History + Net Worth)</title>
   <style>
     :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
     body { margin: 0; background:#0b0f14; color:#e8eef6; }
     .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px; }
     h1 { font-size: 22px; margin: 0 0 14px; }
     .card { background:#121a24; border:1px solid #223043; border-radius: 14px; padding: 16px; }
+
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     label { display:block; font-size: 12px; color:#b7c4d6; margin-bottom: 6px; }
     input {
       width:100%; box-sizing:border-box; padding: 10px 12px; border-radius: 10px;
       border: 1px solid #2a3a52; background:#0e1520; color:#e8eef6; font-size: 14px;
     }
+
     .row { display:flex; gap: 10px; flex-wrap: wrap; align-items:center; margin-top: 12px; }
     button {
       padding: 10px 12px; border-radius: 10px; border:1px solid #2a3a52;
       background:#162235; color:#e8eef6; cursor:pointer;
     }
     button:hover { background:#1b2a42; }
+
     .muted { color:#a9b7ca; font-size: 12px; }
+
     .kpis { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
     .kpi { background:#0e1520; border:1px solid #223043; border-radius: 12px; padding: 12px; }
     .kpi .t { font-size: 12px; color:#b7c4d6; }
     .kpi .v { font-size: 20px; margin-top: 6px; font-weight: 650; }
     .kpi .s { font-size: 12px; color:#a9b7ca; margin-top: 4px; }
+
     .status { margin-top: 10px; font-size: 12px; }
     .ok { color:#a6e3a1; }
     .err { color:#f38ba8; white-space: pre-wrap; }
+
     footer { margin-top: 14px; color:#8ea3bd; font-size: 12px; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
 
+    /* Pie */
     .chartWrap { margin-top: 16px; display:grid; grid-template-columns: 320px 1fr; gap: 14px; align-items:center; }
     .chartCard { background:#0e1520; border:1px solid #223043; border-radius: 12px; padding: 12px; }
     canvas { width: 100%; height: auto; display:block; }
+
     .legend { display:flex; flex-direction: column; gap: 8px; }
     .legendItem { display:flex; align-items:center; gap: 10px; }
     .swatch { width: 14px; height: 14px; border-radius: 4px; border:1px solid #223043; }
     .legendText { font-size: 12px; color:#c7d4e6; }
     .legendSub { font-size: 12px; color:#92a6c0; margin-left: 24px; }
 
+    /* History charts */
     .historyGrid { margin-top: 16px; display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .historyHeader { display:flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; }
     .historyTitle { font-weight: 700; }
@@ -57,7 +66,7 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>Gold & Silver Portfolio (Live + History)</h1>
+    <h1>Gold & Silver Portfolio (Live + History + Net Worth)</h1>
 
     <div class="card">
       <div class="grid">
@@ -154,6 +163,18 @@
           <canvas id="silverLine" width="520" height="220" aria-label="Silver historical line chart"></canvas>
         </div>
       </div>
+
+      <!-- Net worth chart -->
+      <div class="chartCard" style="margin-top:12px;">
+        <div class="historyHeader">
+          <div>
+            <div class="historyTitle">Net worth (Gold + Silver)</div>
+            <div class="subtle">USD (based on your kg holdings and historical prices)</div>
+          </div>
+          <div class="pill" id="tfPillNet">—</div>
+        </div>
+        <canvas id="netLine" width="980" height="240" aria-label="Net worth historical line chart"></canvas>
+      </div>
     </div>
 
     <footer>
@@ -161,8 +182,10 @@
       History sources:
       <code>https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0</code> and
       <code>https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0</code><br/>
-      Parsing rule (as requested): API returns <code>[ "csv,..." ]</code>; we remove the first CSV value; then read pairs:
-      even index (0,2,4,...) = timestamp (seconds), odd index = price.
+      Parsing rule: response is <code>[ "csv,..." ]</code>; remove first CSV value; then read pairs:
+      even index (0,2,4,...) = timestamp seconds; odd index = price.
+      <br/><br/>
+      Note: if you open this as <code>file://</code>, some browsers block cross-origin fetch. Host it (even a simple local server) for reliable API calls.
     </footer>
   </div>
 
@@ -175,7 +198,7 @@
     const API_HIST_SILVER = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
 
     const LIVE_REFRESH_SECONDS = 60;
-    const ROTATE_SECONDS = 5;
+    const ROTATE_SECONDS = 30;
 
     // 1 kg = 32.1507465686 troy ounces
     const TROY_OZ_PER_KG = 32.1507465686;
@@ -185,17 +208,18 @@
     const COOKIE_SILVER = "holdings_silver_kg";
 
     // Colors
-    const COLOR_GOLD = "#D4AF37";   // golden
-    const COLOR_SILVER = "#C0C0C0"; // silver
+    const COLOR_GOLD = "#D4AF37";     // golden
+    const COLOR_SILVER = "#C0C0C0";   // silver
+    const COLOR_NET = "#4ea3ff";      // net worth line color
     const COLOR_BG = "#0e1520";
     const COLOR_TEXT = "#c7d4e6";
     const COLOR_GRID = "#223043";
 
     // Rotation timeframes
     const TIMEFRAMES = [
-      { key: "1M", label: "1 month",  ms: 30 * 24 * 60 * 60 * 1000 },
-      { key: "6M", label: "6 months", ms: 183 * 24 * 60 * 60 * 1000 },
-      { key: "1Y", label: "1 year",   ms: 365 * 24 * 60 * 60 * 1000 },
+      { key: "1M",  label: "1 month",  ms: 30  * 24 * 60 * 60 * 1000 },
+      { key: "6M",  label: "6 months", ms: 183 * 24 * 60 * 60 * 1000 },
+      { key: "1Y",  label: "1 year",   ms: 365 * 24 * 60 * 60 * 1000 },
       { key: "10Y", label: "10 years", ms: 3652 * 24 * 60 * 60 * 1000 }
     ];
 
@@ -225,18 +249,30 @@
     document.getElementById("swatchGold").style.background = COLOR_GOLD;
     document.getElementById("swatchSilver").style.background = COLOR_SILVER;
 
+    // Pie
     const pieCanvas = document.getElementById("pie");
     const pieCtx = pieCanvas.getContext("2d");
     const goldPortionEl = document.getElementById("goldPortion");
     const silverPortionEl = document.getElementById("silverPortion");
 
+    // History line charts
     const goldLineCanvas = document.getElementById("goldLine");
     const silverLineCanvas = document.getElementById("silverLine");
+    const netLineCanvas = document.getElementById("netLine");
+
     const goldLineCtx = goldLineCanvas.getContext("2d");
     const silverLineCtx = silverLineCanvas.getContext("2d");
+    const netLineCtx = netLineCanvas.getContext("2d");
 
     const tfPillGold = document.getElementById("tfPillGold");
     const tfPillSilver = document.getElementById("tfPillSilver");
+    const tfPillNet = document.getElementById("tfPillNet");
+	
+	const hoverState = {
+		  goldLine: { active: false, xMs: null, idx: null },
+		  silverLine: { active: false, xMs: null, idx: null },
+		  netLine: { active: false, xMs: null, idx: null }
+		};
 
     // -----------------------
     // State
@@ -251,19 +287,54 @@
     // -----------------------
     function fmtUSD(n) {
       if (!Number.isFinite(n)) return "—";
-      return new Intl.NumberFormat("en-US", { style:"currency", currency:"USD", maximumFractionDigits: 2 }).format(n);
+      return new Intl.NumberFormat("en-US", {
+        style:"currency", currency:"USD", maximumFractionDigits: 2
+      }).format(n);
     }
-    function fmtNum(n, digits = 4) {
+
+    function fmtNum(n, digits = 2) {
       if (!Number.isFinite(n)) return "—";
-      return new Intl.NumberFormat("en-US", { maximumFractionDigits: digits }).format(n);
+      return new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: digits
+      }).format(n);
     }
+	
+	function filterByTimeframeUsingNow(series, tf, nowMs) {
+	  if (!series || !series.length) return [];
+	  const cutoff = nowMs - tf.ms;
+	  return series.filter(pt => {
+		const t = pt.t.getTime();
+		return t >= cutoff && t <= nowMs; // keep within the shared window
+	  });
+	}
+
+	function getMousePos(canvas, evt) {
+	  const r = canvas.getBoundingClientRect();
+	  return { x: evt.clientX - r.left, y: evt.clientY - r.top };
+	}
+
+
     function fmtPct(n) {
       if (!Number.isFinite(n)) return "—";
-      return new Intl.NumberFormat("en-US", { style:"percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n);
+      return new Intl.NumberFormat("en-US", {
+        style:"percent", minimumFractionDigits: 1, maximumFractionDigits: 1
+      }).format(n);
     }
-    function setStatusOk(msg) { statusEl.className = "status ok"; statusEl.textContent = msg || ""; }
-    function setStatusErr(msg) { statusEl.className = "status err"; statusEl.textContent = msg || "Error"; }
-    function parseKg(el) { const v = Number(el.value); return Number.isFinite(v) && v >= 0 ? v : 0; }
+
+    function setStatusOk(msg) {
+      statusEl.className = "status ok";
+      statusEl.textContent = msg || "";
+    }
+
+    function setStatusErr(msg) {
+      statusEl.className = "status err";
+      statusEl.textContent = msg || "Error";
+    }
+
+    function parseKg(el) {
+      const v = Number(el.value);
+      return Number.isFinite(v) && v >= 0 ? v : 0;
+    }
 
     // -----------------------
     // Cookies
@@ -271,34 +342,43 @@
     function setCookie(name, value, days = 365) {
       const d = new Date();
       d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(String(value))}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+      document.cookie =
+        `${encodeURIComponent(name)}=${encodeURIComponent(String(value))}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
     }
+
     function getCookie(name) {
       const key = encodeURIComponent(name) + "=";
       const parts = document.cookie.split(";").map(s => s.trim());
-      for (const p of parts) if (p.startsWith(key)) return decodeURIComponent(p.substring(key.length));
+      for (const p of parts) {
+        if (p.startsWith(key)) return decodeURIComponent(p.substring(key.length));
+      }
       return null;
     }
+
     function deleteCookie(name) {
-      document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+      document.cookie =
+        `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
     }
+
     function loadSavedAmounts() {
       const g = getCookie(COOKIE_GOLD);
       const s = getCookie(COOKIE_SILVER);
       if (g !== null && g !== "") goldKgEl.value = g;
       if (s !== null && s !== "") silverKgEl.value = s;
     }
+
     function saveAmountsToCookies() {
       setCookie(COOKIE_GOLD, parseKg(goldKgEl));
       setCookie(COOKIE_SILVER, parseKg(silverKgEl));
     }
 
     // -----------------------
-    // Pie chart (value share)
+    // Pie chart
     // -----------------------
     function drawPie(goldValue, silverValue) {
       const cssSize = 320;
       const dpr = window.devicePixelRatio || 1;
+
       pieCanvas.style.width = cssSize + "px";
       pieCanvas.style.height = cssSize + "px";
       pieCanvas.width = Math.round(cssSize * dpr);
@@ -312,8 +392,11 @@
       const cx = cssSize / 2, cy = cssSize / 2;
       const r = Math.min(cx, cy) - 14;
 
-      const total = (Number.isFinite(goldValue) ? goldValue : 0) + (Number.isFinite(silverValue) ? silverValue : 0);
+      const total =
+        (Number.isFinite(goldValue) ? goldValue : 0) +
+        (Number.isFinite(silverValue) ? silverValue : 0);
 
+      // If no value, show equal halves
       const g = total > 0 ? goldValue : 1;
       const s = total > 0 ? silverValue : 1;
       const denom = g + s;
@@ -321,27 +404,35 @@
       const gFrac = denom > 0 ? (g / denom) : 0.5;
       const sFrac = denom > 0 ? (s / denom) : 0.5;
 
-      goldPortionEl.textContent = total > 0 ? `${fmtUSD(goldValue)} • ${fmtPct(gFrac)}` : `—`;
-      silverPortionEl.textContent = total > 0 ? `${fmtUSD(silverValue)} • ${fmtPct(sFrac)}` : `—`;
+      goldPortionEl.textContent = total > 0 ? `${fmtUSD(goldValue)} • ${fmtPct(gFrac)}` : "—";
+      silverPortionEl.textContent = total > 0 ? `${fmtUSD(silverValue)} • ${fmtPct(sFrac)}` : "—";
 
       let start = -Math.PI / 2;
 
+      // Gold slice
       const gEnd = start + (2 * Math.PI * gFrac);
       pieCtx.beginPath(); pieCtx.moveTo(cx, cy);
       pieCtx.arc(cx, cy, r, start, gEnd);
-      pieCtx.closePath(); pieCtx.fillStyle = COLOR_GOLD; pieCtx.fill();
+      pieCtx.closePath();
+      pieCtx.fillStyle = COLOR_GOLD;
+      pieCtx.fill();
 
+      // Silver slice
       const sEnd = gEnd + (2 * Math.PI * sFrac);
       pieCtx.beginPath(); pieCtx.moveTo(cx, cy);
       pieCtx.arc(cx, cy, r, gEnd, sEnd);
-      pieCtx.closePath(); pieCtx.fillStyle = COLOR_SILVER; pieCtx.fill();
+      pieCtx.closePath();
+      pieCtx.fillStyle = COLOR_SILVER;
+      pieCtx.fill();
 
+      // Donut hole
       pieCtx.beginPath();
       pieCtx.arc(cx, cy, r * 0.55, 0, 2 * Math.PI);
       pieCtx.closePath();
       pieCtx.fillStyle = COLOR_BG;
       pieCtx.fill();
 
+      // Center text
       pieCtx.fillStyle = COLOR_TEXT;
       pieCtx.textAlign = "center";
       pieCtx.textBaseline = "middle";
@@ -354,9 +445,6 @@
     // -----------------------
     // Historical parsing
     // -----------------------
-    // API returns: [ "csvString" ]
-    // csvString -> comma-separated values
-    // remove first value, then pairs: even idx=timestamp seconds, odd idx=price
     function parseHistoricalResponse(jsonArray) {
       if (!Array.isArray(jsonArray) || typeof jsonArray[0] !== "string") {
         throw new Error("Unexpected historical response format (expected array with one CSV string).");
@@ -372,7 +460,6 @@
         if (!Number.isFinite(tsSec) || !Number.isFinite(price)) continue;
         out.push({ t: new Date(tsSec * 100000), p: price });
       }
-      // Sort ascending (just in case)
       out.sort((a, b) => a.t - b.t);
       return out;
     }
@@ -385,6 +472,7 @@
           fetch(`${API_HIST_GOLD}?_=${Date.now()}`, { cache: "no-store" }),
           fetch(`${API_HIST_SILVER}?_=${Date.now()}`, { cache: "no-store" })
         ]);
+
         if (!gRes.ok) throw new Error(`Gold history HTTP ${gRes.status} ${gRes.statusText}`);
         if (!sRes.ok) throw new Error(`Silver history HTTP ${sRes.status} ${sRes.statusText}`);
 
@@ -402,7 +490,7 @@
       } catch (err) {
         setStatusErr(
           "Failed to fetch historical data.\n" +
-          "If you open this file as file://, some browsers block cross-origin requests.\n" +
+          "If you opened this file as file://, some browsers block cross-origin requests.\n" +
           "Serve/host the page for reliable API calls.\n\n" +
           String(err)
         );
@@ -419,122 +507,259 @@
     }
 
     // -----------------------
-    // Line chart drawing (canvas)
+    // Net worth series builder
     // -----------------------
-    function drawLineChart(ctx, canvas, points, lineColor, tfLabel) {
-      // HiDPI sizing
-      const cssW = canvas.parentElement.clientWidth - 24; // chartCard padding approx
-      const cssH = 220;
-      const dpr = window.devicePixelRatio || 1;
+    // NetWorth(t) = goldPrice(t)*goldKg*ozPerKg + silverPrice(t)*silverKg*ozPerKg
+    // Uses union of timestamps and "last known price" for each metal to compute every point.
+	function buildNetWorthSeries(tf) {
+	  const goldKg = parseKg(goldKgEl);
+	  const silverKg = parseKg(silverKgEl);
 
-      canvas.style.width = cssW + "px";
-      canvas.style.height = cssH + "px";
-      canvas.width = Math.max(1, Math.round(cssW * dpr));
-      canvas.height = Math.max(1, Math.round(cssH * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	  if (!histGold.length || !histSilver.length) return [];
 
-      const W = cssW, H = cssH;
-	  
-	  
-      const xs = points.map(p => p.t.getTime());
-      const ys = points.map(p => p.p);
-	  
+	  // Use a common "now" so both series are filtered to the same window.
+	  const nowMs = Math.min(
+		histGold[histGold.length - 1].t.getTime(),
+		histSilver[histSilver.length - 1].t.getTime()
+	  );
+
+	  const g = filterByTimeframeUsingNow(histGold, tf, nowMs);
+	  const s = filterByTimeframeUsingNow(histSilver, tf, nowMs);
+
+	  if (g.length < 2 || s.length < 2) return [];
+
+	  // Union timestamps
+	  const times = new Set();
+	  for (const pt of g) times.add(pt.t.getTime());
+	  for (const pt of s) times.add(pt.t.getTime());
+	  const sortedTimes = Array.from(times).sort((a, b) => a - b);
+
+	  // Walk-forward last-known prices
+	  let gi = 0, si = 0;
+	  let lastGold = g[0].p;
+	  let lastSilver = s[0].p;
+
+	  const out = [];
+	  for (const ms of sortedTimes) {
+		while (gi < g.length && g[gi].t.getTime() <= ms) { lastGold = g[gi].p; gi++; }
+		while (si < s.length && s[si].t.getTime() <= ms) { lastSilver = s[si].p; si++; }
+
+		const goldValue = goldKg * TROY_OZ_PER_KG * lastGold;
+		const silverValue = silverKg * TROY_OZ_PER_KG * lastSilver;
+
+		out.push({ t: new Date(ms), p: goldValue + silverValue });
+	  }
+
+	  return out;
+	}
+
+
+    // -----------------------
+    // Line chart drawing (canvas) - dynamic left padding to prevent clipping
+    // -----------------------
+	function drawLineChart(ctx, canvas, points, lineColor, tfLabel) {
+	  const cssW = Math.max(320, canvas.parentElement.clientWidth - 24);
+	  const cssH = (canvas.id === "netLine") ? 240 : 220;
+
+	  const dpr = window.devicePixelRatio || 1;
+	  canvas.style.width = cssW + "px";
+	  canvas.style.height = cssH + "px";
+	  canvas.width = Math.max(1, Math.round(cssW * dpr));
+	  canvas.height = Math.max(1, Math.round(cssH * dpr));
+	  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+	  const W = cssW, H = cssH;
+	  const padR = 14, padT = 14, padB = 30;
+
+	  // background
+	  ctx.clearRect(0, 0, W, H);
+	  ctx.fillStyle = COLOR_BG;
+	  ctx.fillRect(0, 0, W, H);
+
+	  if (!points || points.length < 2) {
+		ctx.fillStyle = COLOR_TEXT;
+		ctx.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+		ctx.fillText("No data", 16, 20);
+		return;
+	  }
+
+	  const xs = points.map(p => p.t.getTime());
+	  const ys = points.map(p => p.p);
+
 	  const xMin = Math.min(...xs), xMax = Math.max(...xs);
-      let yMin = Math.min(...ys), yMax = Math.max(...ys);
-      if (yMin === yMax) { yMin *= 0.999; yMax *= 1.001; }
-      
-	  const padR = 14, padT = 14, padB = 28;
+	  let yMin = Math.min(...ys), yMax = Math.max(...ys);
+	  if (yMin === yMax) { yMin *= 0.999; yMax *= 1.001; }
 
-		// Determine padding based on widest Y label (prevents clipping)
+	  // Dynamic left padding based on widest y label
+	  ctx.font = "600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+	  const yMaxLabel = fmtNum(yMax, 2);
+	  const yMinLabel = fmtNum(yMin, 2);
+	  const widest = Math.max(ctx.measureText(yMaxLabel).width, ctx.measureText(yMinLabel).width);
+	  const padL = Math.ceil(widest + 18);
+
+	  const plotW = W - padL - padR;
+	  const plotH = H - padT - padB;
+
+	  // grid
+	  ctx.strokeStyle = COLOR_GRID;
+	  ctx.lineWidth = 1;
+	  ctx.globalAlpha = 0.85;
+	  for (let i = 0; i <= 4; i++) {
+		const y = padT + (plotH * i / 4);
+		ctx.beginPath();
+		ctx.moveTo(padL, y);
+		ctx.lineTo(padL + plotW, y);
+		ctx.stroke();
+	  }
+	  ctx.globalAlpha = 1;
+
+	  // y labels
+	  ctx.fillStyle = COLOR_TEXT;
+	  ctx.textAlign = "right";
+	  ctx.textBaseline = "middle";
+	  ctx.fillText(yMaxLabel, padL - 8, padT);
+	  ctx.fillText(yMinLabel, padL - 8, padT + plotH);
+
+	  // x labels (start/end)
+	  const d0 = new Date(xMin);
+	  const d1 = new Date(xMax);
+	  ctx.textBaseline = "top";
+	  ctx.textAlign = "left";
+	  ctx.fillText(d0.toISOString().slice(0, 10), padL, padT + plotH + 6);
+	  ctx.textAlign = "right";
+	  ctx.fillText(d1.toISOString().slice(0, 10), padL + plotW, padT + plotH + 6);
+
+	  // timeframe label
+	  ctx.textAlign = "right";
+	  ctx.textBaseline = "top";
+	  ctx.fillStyle = "#92a6c0";
+	  ctx.fillText(tfLabel, padL + plotW, 6);
+
+	  // scales
+	  function xScale(ms) { return padL + ((ms - xMin) / (xMax - xMin)) * plotW; }
+	  function yScale(val) { return padT + (1 - ((val - yMin) / (yMax - yMin))) * plotH; }
+
+	  // line
+	  ctx.strokeStyle = lineColor;
+	  ctx.lineWidth = 2;
+	  ctx.beginPath();
+	  ctx.moveTo(xScale(xs[0]), yScale(ys[0]));
+	  for (let i = 1; i < xs.length; i++) ctx.lineTo(xScale(xs[i]), yScale(ys[i]));
+	  ctx.stroke();
+
+	  // last marker
+	  ctx.fillStyle = lineColor;
+	  ctx.beginPath();
+	  ctx.arc(xScale(xs[xs.length - 1]), yScale(ys[ys.length - 1]), 3, 0, 2 * Math.PI);
+	  ctx.fill();
+
+	  // -------------------------
+	  // Hover overlay (crosshair + value + date)
+	  // -------------------------
+	  const hs = hoverState[canvas.id];
+	  if (hs && hs.active && Number.isFinite(hs.xMs)) {
+		// Clamp hover time to chart domain
+		const hoverMs = Math.min(xMax, Math.max(xMin, hs.xMs));
+
+		// Find nearest point by time (binary search)
+		let lo = 0, hi = xs.length - 1;
+		while (lo < hi) {
+		  const mid = (lo + hi) >> 1;
+		  if (xs[mid] < hoverMs) lo = mid + 1;
+		  else hi = mid;
+		}
+		const i1 = lo;
+		const i0 = Math.max(0, i1 - 1);
+		const idx = (Math.abs(xs[i1] - hoverMs) < Math.abs(xs[i0] - hoverMs)) ? i1 : i0;
+
+		const px = xScale(xs[idx]);
+		const py = yScale(ys[idx]);
+
+		// Vertical line
+		ctx.strokeStyle = "#92a6c0";
+		ctx.lineWidth = 1;
+		ctx.globalAlpha = 0.9;
+		ctx.beginPath();
+		ctx.moveTo(px, padT);
+		ctx.lineTo(px, padT + plotH);
+		ctx.stroke();
+		ctx.globalAlpha = 1;
+
+		// Point highlight
+		ctx.fillStyle = lineColor;
+		ctx.beginPath();
+		ctx.arc(px, py, 4, 0, 2 * Math.PI);
+		ctx.fill();
+
+		// Value label (top)
+		const valueText = (canvas.id === "netLine")
+		  ? fmtUSD(ys[idx])            // net worth in USD
+		  : fmtNum(ys[idx], 2);        // metal price (USD/oz)
+
+		ctx.font = "700 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+		const valW = ctx.measureText(valueText).width;
+		const boxPadX = 8, boxPadY = 5;
+		const boxW = valW + boxPadX * 2;
+		const boxH = 22;
+
+		// Keep tooltip inside chart
+		let boxX = px - boxW / 2;
+		boxX = Math.max(padL, Math.min(padL + plotW - boxW, boxX));
+		const boxY = padT + 6;
+
+		ctx.fillStyle = "#0b0f14";
+		ctx.globalAlpha = 0.9;
+		ctx.fillRect(boxX, boxY, boxW, boxH);
+		ctx.globalAlpha = 1;
+
+		ctx.strokeStyle = COLOR_GRID;
+		ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+		ctx.fillStyle = COLOR_TEXT;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText(valueText, boxX + boxW / 2, boxY + boxH / 2);
+
+		// Date label at bottom aligned with line
+		const dateText = new Date(xs[idx]).toISOString().slice(0, 10);
 		ctx.font = "600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-		const yMaxLabel = fmtNum(yMax, 2);
-		const yMinLabel = fmtNum(yMin, 2);
-		const widest = Math.max(ctx.measureText(yMaxLabel).width, ctx.measureText(yMinLabel).width);
+		const dtW = ctx.measureText(dateText).width;
+		const dtBoxW = dtW + 12;
+		const dtBoxH = 20;
 
-		// 10px for breathing room + 6px gap to axis
-		const padL = Math.ceil(widest + 16);
+		let dtX = px - dtBoxW / 2;
+		dtX = Math.max(padL, Math.min(padL + plotW - dtBoxW, dtX));
+		const dtY = padT + plotH + 4;
 
-	  
-      const plotW = W - padL - padR;
-      const plotH = H - padT - padB;
+		ctx.fillStyle = "#0b0f14";
+		ctx.globalAlpha = 0.9;
+		ctx.fillRect(dtX, dtY, dtBoxW, dtBoxH);
+		ctx.globalAlpha = 1;
 
-      // background
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = COLOR_BG;
-      ctx.fillRect(0, 0, W, H);
+		ctx.strokeStyle = COLOR_GRID;
+		ctx.strokeRect(dtX, dtY, dtBoxW, dtBoxH);
 
-      // If no data, draw placeholder
-      if (!points || points.length < 2) {
-        ctx.fillStyle = COLOR_TEXT;
-        ctx.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-        ctx.fillText("No data", padL, padT + 14);
-        return;
-      }
-
-      // grid lines (horizontal)
-      ctx.strokeStyle = COLOR_GRID;
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.85;
-      for (let i = 0; i <= 4; i++) {
-        const y = padT + (plotH * i / 4);
-        ctx.beginPath();
-        ctx.moveTo(padL, y);
-        ctx.lineTo(padL + plotW, y);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-
-      // axes labels (min/max)
-      ctx.fillStyle = COLOR_TEXT;
-      ctx.font = "600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.fillText(fmtNum(yMax, 2), padL - 6, padT);
-      ctx.fillText(fmtNum(yMin, 2), padL - 6, padT + plotH);
-
-      // x labels (start/end dates)
-      const d0 = new Date(xMin);
-      const d1 = new Date(xMax);
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      ctx.fillText(d0.toISOString().slice(0,10), padL, padT + plotH + 6);
-      ctx.textAlign = "right";
-      ctx.fillText(d1.toISOString().slice(0,10), padL + plotW, padT + plotH + 6);
-
-      // timeframe label (top-right inside chart)
-      ctx.textAlign = "right";
-      ctx.textBaseline = "top";
-      ctx.fillStyle = "#92a6c0";
-      ctx.fillText(tfLabel, padL + plotW, 6);
-
-      // line
-      function xScale(x) { return padL + ( (x - xMin) / (xMax - xMin) ) * plotW; }
-      function yScale(y) { return padT + (1 - ( (y - yMin) / (yMax - yMin) )) * plotH; }
-
-      ctx.strokeStyle = lineColor;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(xScale(xs[0]), yScale(ys[0]));
-      for (let i = 1; i < xs.length; i++) ctx.lineTo(xScale(xs[i]), yScale(ys[i]));
-      ctx.stroke();
-
-      // last point marker
-      ctx.fillStyle = lineColor;
-      ctx.beginPath();
-      ctx.arc(xScale(xs[xs.length - 1]), yScale(ys[ys.length - 1]), 3, 0, 2*Math.PI);
-      ctx.fill();
-    }
+		ctx.fillStyle = "#92a6c0";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText(dateText, dtX + dtBoxW / 2, dtY + dtBoxH / 2);
+	  }
+	}
 
     function drawHistoricalForCurrentTimeframe() {
       const tf = TIMEFRAMES[tfIndex];
+
       tfPillGold.textContent = tf.label;
       tfPillSilver.textContent = tf.label;
+      tfPillNet.textContent = tf.label;
 
       const g = filterByTimeframe(histGold, tf);
       const s = filterByTimeframe(histSilver, tf);
+      const net = buildNetWorthSeries(tf);
 
       drawLineChart(goldLineCtx, goldLineCanvas, g, COLOR_GOLD, `Timeframe: ${tf.label}`);
       drawLineChart(silverLineCtx, silverLineCanvas, s, COLOR_SILVER, `Timeframe: ${tf.label}`);
+      drawLineChart(netLineCtx, netLineCanvas, net, COLOR_NET, `Timeframe: ${tf.label}`);
     }
 
     // -----------------------
@@ -544,8 +769,9 @@
       const goldKg = parseKg(goldKgEl);
       const silverKg = parseKg(silverKgEl);
 
-      const xau = lastPrices.xauPrice; // USD / troy oz
-      const xag = lastPrices.xagPrice; // USD / troy oz
+      // Per your note: live xauPrice = USD per troy oz gold, xagPrice = USD per troy oz silver
+      const xau = lastPrices.xauPrice;
+      const xag = lastPrices.xagPrice;
 
       const goldValue = (Number.isFinite(xau) ? goldKg * TROY_OZ_PER_KG * xau : NaN);
       const silverValue = (Number.isFinite(xag) ? silverKg * TROY_OZ_PER_KG * xag : NaN);
@@ -563,7 +789,8 @@
         ? `xagPrice: ${fmtUSD(xag)} / troy oz • ${fmtNum(TROY_OZ_PER_KG, 6)} oz per kg`
         : "Waiting for price…";
 
-      totalMetaEl.textContent = `Holdings: ${fmtNum(goldKg, 3)} kg gold + ${fmtNum(silverKg, 3)} kg silver`;
+      totalMetaEl.textContent =
+        `Holdings: ${fmtNum(goldKg, 3)} kg gold + ${fmtNum(silverKg, 3)} kg silver`;
 
       drawPie(Number.isFinite(goldValue) ? goldValue : 0, Number.isFinite(silverValue) ? silverValue : 0);
     }
@@ -594,7 +821,7 @@
       } catch (err) {
         setStatusErr(
           "Failed to fetch live prices.\n" +
-          "If you open this file as file://, some browsers block cross-origin requests.\n" +
+          "If you opened this file as file://, some browsers block cross-origin requests.\n" +
           "Serve/host the page for reliable API calls.\n\n" +
           String(err)
         );
@@ -619,7 +846,46 @@
     function onAmountChange() {
       saveAmountsToCookies();
       renderPortfolio();
+      // Net worth depends on holdings, so redraw historical charts immediately
+      drawHistoricalForCurrentTimeframe();
     }
+	
+	function attachHover(canvas) {
+	  canvas.addEventListener("mousemove", (e) => {
+		const { x } = getMousePos(canvas, e);
+
+		// Convert mouse x-px into a "time" guess using the currently plotted domain.
+		// We do that by using the currently rendered series for the current timeframe.
+		const tf = TIMEFRAMES[tfIndex];
+		let series;
+		if (canvas.id === "goldLine") series = filterByTimeframe(histGold, tf);
+		else if (canvas.id === "silverLine") series = filterByTimeframe(histSilver, tf);
+		else series = buildNetWorthSeries(tf);
+
+		if (!series || series.length < 2) return;
+
+		const xs = series.map(p => p.t.getTime());
+		const xMin = xs[0];
+		const xMax = xs[xs.length - 1];
+
+		// We need to approximate chart plot area left/right padding the same way drawLineChart does.
+		// Easiest: use a safe fixed left boundary and let drawLineChart snap to nearest point anyway.
+		// We'll map x across the canvas width.
+		const ms = xMin + ((x / canvas.clientWidth) * (xMax - xMin));
+
+		hoverState[canvas.id] = { active: true, xMs: ms, idx: null };
+		drawHistoricalForCurrentTimeframe();
+	  });
+
+	  canvas.addEventListener("mouseleave", () => {
+		hoverState[canvas.id] = { active: false, xMs: null, idx: null };
+		drawHistoricalForCurrentTimeframe();
+	  });
+	}
+
+
+
+
     goldKgEl.addEventListener("input", onAmountChange);
     silverKgEl.addEventListener("input", onAmountChange);
 
@@ -633,12 +899,12 @@
       silverKgEl.value = "0";
       setStatusOk("Cleared saved amounts.");
       renderPortfolio();
+      drawHistoricalForCurrentTimeframe();
     });
 
-    // Redraw line charts on resize (keeps crisp scaling)
     window.addEventListener("resize", () => {
-      drawHistoricalForCurrentTimeframe();
       renderPortfolio();
+      drawHistoricalForCurrentTimeframe();
     });
 
     // -----------------------
@@ -650,6 +916,9 @@
     fetchHistorical();
     startRotation();
     setInterval(fetchLivePrices, LIVE_REFRESH_SECONDS * 1000);
+	attachHover(goldLineCanvas);
+	attachHover(silverLineCanvas);
+	attachHover(netLineCanvas);
   </script>
 </body>
 </html>
