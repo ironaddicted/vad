@@ -434,7 +434,27 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const W = cssW, H = cssH;
-      const padL = 42, padR = 14, padT = 14, padB = 28;
+	  
+	  
+      const xs = points.map(p => p.t.getTime());
+      const ys = points.map(p => p.p);
+	  
+	  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+      let yMin = Math.min(...ys), yMax = Math.max(...ys);
+      if (yMin === yMax) { yMin *= 0.999; yMax *= 1.001; }
+      
+	  const padR = 14, padT = 14, padB = 28;
+
+		// Determine padding based on widest Y label (prevents clipping)
+		ctx.font = "600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+		const yMaxLabel = fmtNum(yMax, 2);
+		const yMinLabel = fmtNum(yMin, 2);
+		const widest = Math.max(ctx.measureText(yMaxLabel).width, ctx.measureText(yMinLabel).width);
+
+		// 10px for breathing room + 6px gap to axis
+		const padL = Math.ceil(widest + 16);
+
+	  
       const plotW = W - padL - padR;
       const plotH = H - padT - padB;
 
@@ -450,13 +470,6 @@
         ctx.fillText("No data", padL, padT + 14);
         return;
       }
-
-      const xs = points.map(p => p.t.getTime());
-      const ys = points.map(p => p.p);
-
-      const xMin = Math.min(...xs), xMax = Math.max(...xs);
-      let yMin = Math.min(...ys), yMax = Math.max(...ys);
-      if (yMin === yMax) { yMin *= 0.999; yMax *= 1.001; }
 
       // grid lines (horizontal)
       ctx.strokeStyle = COLOR_GRID;
