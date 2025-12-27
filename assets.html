@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gold & Silver Holdings Value (Live + History)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background:#0b0f14; color:#e8eef6; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px; }
+    h1 { font-size: 22px; margin: 0 0 14px; }
+    .card { background:#121a24; border:1px solid #223043; border-radius: 14px; padding: 16px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display:block; font-size: 12px; color:#b7c4d6; margin-bottom: 6px; }
+    input {
+      width:100%; box-sizing:border-box; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid #2a3a52; background:#0e1520; color:#e8eef6; font-size: 14px;
+    }
+    .row { display:flex; gap: 10px; flex-wrap: wrap; align-items:center; margin-top: 12px; }
+    button {
+      padding: 10px 12px; border-radius: 10px; border:1px solid #2a3a52;
+      background:#162235; color:#e8eef6; cursor:pointer;
+    }
+    button:hover { background:#1b2a42; }
+    .muted { color:#a9b7ca; font-size: 12px; }
+    .kpis { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .kpi { background:#0e1520; border:1px solid #223043; border-radius: 12px; padding: 12px; }
+    .kpi .t { font-size: 12px; color:#b7c4d6; }
+    .kpi .v { font-size: 20px; margin-top: 6px; font-weight: 650; }
+    .kpi .s { font-size: 12px; color:#a9b7ca; margin-top: 4px; }
+    .status { margin-top: 10px; font-size: 12px; }
+    .ok { color:#a6e3a1; }
+    .err { color:#f38ba8; white-space: pre-wrap; }
+    footer { margin-top: 14px; color:#8ea3bd; font-size: 12px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+
+    .chartWrap { margin-top: 16px; display:grid; grid-template-columns: 320px 1fr; gap: 14px; align-items:center; }
+    .chartCard { background:#0e1520; border:1px solid #223043; border-radius: 12px; padding: 12px; }
+    canvas { width: 100%; height: auto; display:block; }
+    .legend { display:flex; flex-direction: column; gap: 8px; }
+    .legendItem { display:flex; align-items:center; gap: 10px; }
+    .swatch { width: 14px; height: 14px; border-radius: 4px; border:1px solid #223043; }
+    .legendText { font-size: 12px; color:#c7d4e6; }
+    .legendSub { font-size: 12px; color:#92a6c0; margin-left: 24px; }
+
+    .historyGrid { margin-top: 16px; display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .historyHeader { display:flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+    .historyTitle { font-weight: 700; }
+    .pill { font-size: 12px; color:#0b0f14; padding: 4px 8px; border-radius: 999px; background:#a9b7ca; }
+    .subtle { font-size: 12px; color:#92a6c0; }
+
+    @media (max-width: 900px) {
+      .chartWrap { grid-template-columns: 1fr; }
+      .historyGrid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Gold & Silver Portfolio (Live + History)</h1>
+
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label for="goldKg">Gold amount (kg)</label>
+          <input id="goldKg" type="number" inputmode="decimal" step="0.001" min="0" value="4"/>
+        </div>
+        <div>
+          <label for="silverKg">Silver amount (kg)</label>
+          <input id="silverKg" type="number" inputmode="decimal" step="0.001" min="0" value="28"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="refreshBtn" type="button">Refresh live prices</button>
+        <button id="refreshHistBtn" type="button">Refresh historical charts</button>
+        <button id="clearBtn" type="button">Clear saved amounts</button>
+        <span class="muted">Live auto-refresh: <span id="autoEvery">60</span>s</span>
+        <span class="muted">History rotation: <span id="rotEvery">5</span>s</span>
+        <span class="muted">Last live update: <span id="lastUpdate">—</span></span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="t">Gold value</div>
+          <div class="v" id="goldValue">$0.00</div>
+          <div class="s" id="goldMeta">—</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Silver value</div>
+          <div class="v" id="silverValue">$0.00</div>
+          <div class="s" id="silverMeta">—</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Total value</div>
+          <div class="v" id="totalValue">$0.00</div>
+          <div class="s" id="totalMeta">—</div>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <!-- Pie chart -->
+      <div class="chartWrap">
+        <div class="chartCard">
+          <canvas id="pie" width="320" height="320" aria-label="Gold vs Silver Value Pie Chart"></canvas>
+        </div>
+        <div class="legend">
+          <div class="legendItem">
+            <span class="swatch" id="swatchGold"></span>
+            <div>
+              <div class="legendText">Gold portion (by USD value)</div>
+              <div class="legendSub" id="goldPortion">—</div>
+            </div>
+          </div>
+          <div class="legendItem">
+            <span class="swatch" id="swatchSilver"></span>
+            <div>
+              <div class="legendText">Silver portion (by USD value)</div>
+              <div class="legendSub" id="silverPortion">—</div>
+            </div>
+          </div>
+          <div class="legendItem">
+            <span class="swatch" style="background:#223043"></span>
+            <div>
+              <div class="legendText">If totals are $0, chart shows equal halves.</div>
+              <div class="legendSub">Enter amounts and ensure prices load successfully.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical line charts -->
+      <div class="historyGrid">
+        <div class="chartCard">
+          <div class="historyHeader">
+            <div>
+              <div class="historyTitle">Gold (XAU) historical</div>
+              <div class="subtle">USD per troy oz</div>
+            </div>
+            <div class="pill" id="tfPillGold">—</div>
+          </div>
+          <canvas id="goldLine" width="520" height="220" aria-label="Gold historical line chart"></canvas>
+        </div>
+
+        <div class="chartCard">
+          <div class="historyHeader">
+            <div>
+              <div class="historyTitle">Silver (XAG) historical</div>
+              <div class="subtle">USD per troy oz</div>
+            </div>
+            <div class="pill" id="tfPillSilver">—</div>
+          </div>
+          <canvas id="silverLine" width="520" height="220" aria-label="Silver historical line chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Live source: <code>https://data-asg.goldprice.org/dbXRates/USD</code><br/>
+      History sources:
+      <code>https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0</code> and
+      <code>https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0</code><br/>
+      Parsing rule (as requested): API returns <code>[ "csv,..." ]</code>; we remove the first CSV value; then read pairs:
+      even index (0,2,4,...) = timestamp (seconds), odd index = price.
+    </footer>
+  </div>
+
+  <script>
+    // -----------------------
+    // Config
+    // -----------------------
+    const API_LIVE = "https://data-asg.goldprice.org/dbXRates/USD";
+    const API_HIST_GOLD = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0";
+    const API_HIST_SILVER = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
+
+    const LIVE_REFRESH_SECONDS = 60;
+    const ROTATE_SECONDS = 5;
+
+    // 1 kg = 32.1507465686 troy ounces
+    const TROY_OZ_PER_KG = 32.1507465686;
+
+    // Cookie keys
+    const COOKIE_GOLD = "holdings_gold_kg";
+    const COOKIE_SILVER = "holdings_silver_kg";
+
+    // Colors
+    const COLOR_GOLD = "#D4AF37";   // golden
+    const COLOR_SILVER = "#C0C0C0"; // silver
+    const COLOR_BG = "#0e1520";
+    const COLOR_TEXT = "#c7d4e6";
+    const COLOR_GRID = "#223043";
+
+    // Rotation timeframes
+    const TIMEFRAMES = [
+      { key: "1M", label: "1 month",  ms: 30 * 24 * 60 * 60 * 1000 },
+      { key: "6M", label: "6 months", ms: 183 * 24 * 60 * 60 * 1000 },
+      { key: "1Y", label: "1 year",   ms: 365 * 24 * 60 * 60 * 1000 },
+      { key: "10Y", label: "10 years", ms: 3652 * 24 * 60 * 60 * 1000 }
+    ];
+
+    // -----------------------
+    // DOM
+    // -----------------------
+    const goldKgEl = document.getElementById("goldKg");
+    const silverKgEl = document.getElementById("silverKg");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const refreshHistBtn = document.getElementById("refreshHistBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const goldValueEl = document.getElementById("goldValue");
+    const silverValueEl = document.getElementById("silverValue");
+    const totalValueEl = document.getElementById("totalValue");
+
+    const goldMetaEl = document.getElementById("goldMeta");
+    const silverMetaEl = document.getElementById("silverMeta");
+    const totalMetaEl = document.getElementById("totalMeta");
+
+    const statusEl = document.getElementById("status");
+    const lastUpdateEl = document.getElementById("lastUpdate");
+
+    document.getElementById("autoEvery").textContent = String(LIVE_REFRESH_SECONDS);
+    document.getElementById("rotEvery").textContent = String(ROTATE_SECONDS);
+
+    document.getElementById("swatchGold").style.background = COLOR_GOLD;
+    document.getElementById("swatchSilver").style.background = COLOR_SILVER;
+
+    const pieCanvas = document.getElementById("pie");
+    const pieCtx = pieCanvas.getContext("2d");
+    const goldPortionEl = document.getElementById("goldPortion");
+    const silverPortionEl = document.getElementById("silverPortion");
+
+    const goldLineCanvas = document.getElementById("goldLine");
+    const silverLineCanvas = document.getElementById("silverLine");
+    const goldLineCtx = goldLineCanvas.getContext("2d");
+    const silverLineCtx = silverLineCanvas.getContext("2d");
+
+    const tfPillGold = document.getElementById("tfPillGold");
+    const tfPillSilver = document.getElementById("tfPillSilver");
+
+    // -----------------------
+    // State
+    // -----------------------
+    let lastPrices = { xauPrice: null, xagPrice: null, ts: null };
+    let histGold = [];   // [{t: Date, p: number}]
+    let histSilver = []; // [{t: Date, p: number}]
+    let tfIndex = 0;
+
+    // -----------------------
+    // Helpers
+    // -----------------------
+    function fmtUSD(n) {
+      if (!Number.isFinite(n)) return "—";
+      return new Intl.NumberFormat("en-US", { style:"currency", currency:"USD", maximumFractionDigits: 2 }).format(n);
+    }
+    function fmtNum(n, digits = 4) {
+      if (!Number.isFinite(n)) return "—";
+      return new Intl.NumberFormat("en-US", { maximumFractionDigits: digits }).format(n);
+    }
+    function fmtPct(n) {
+      if (!Number.isFinite(n)) return "—";
+      return new Intl.NumberFormat("en-US", { style:"percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n);
+    }
+    function setStatusOk(msg) { statusEl.className = "status ok"; statusEl.textContent = msg || ""; }
+    function setStatusErr(msg) { statusEl.className = "status err"; statusEl.textContent = msg || "Error"; }
+    function parseKg(el) { const v = Number(el.value); return Number.isFinite(v) && v >= 0 ? v : 0; }
+
+    // -----------------------
+    // Cookies
+    // -----------------------
+    function setCookie(name, value, days = 365) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(String(value))}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+    }
+    function getCookie(name) {
+      const key = encodeURIComponent(name) + "=";
+      const parts = document.cookie.split(";").map(s => s.trim());
+      for (const p of parts) if (p.startsWith(key)) return decodeURIComponent(p.substring(key.length));
+      return null;
+    }
+    function deleteCookie(name) {
+      document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+    }
+    function loadSavedAmounts() {
+      const g = getCookie(COOKIE_GOLD);
+      const s = getCookie(COOKIE_SILVER);
+      if (g !== null && g !== "") goldKgEl.value = g;
+      if (s !== null && s !== "") silverKgEl.value = s;
+    }
+    function saveAmountsToCookies() {
+      setCookie(COOKIE_GOLD, parseKg(goldKgEl));
+      setCookie(COOKIE_SILVER, parseKg(silverKgEl));
+    }
+
+    // -----------------------
+    // Pie chart (value share)
+    // -----------------------
+    function drawPie(goldValue, silverValue) {
+      const cssSize = 320;
+      const dpr = window.devicePixelRatio || 1;
+      pieCanvas.style.width = cssSize + "px";
+      pieCanvas.style.height = cssSize + "px";
+      pieCanvas.width = Math.round(cssSize * dpr);
+      pieCanvas.height = Math.round(cssSize * dpr);
+      pieCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      pieCtx.clearRect(0, 0, cssSize, cssSize);
+      pieCtx.fillStyle = COLOR_BG;
+      pieCtx.fillRect(0, 0, cssSize, cssSize);
+
+      const cx = cssSize / 2, cy = cssSize / 2;
+      const r = Math.min(cx, cy) - 14;
+
+      const total = (Number.isFinite(goldValue) ? goldValue : 0) + (Number.isFinite(silverValue) ? silverValue : 0);
+
+      const g = total > 0 ? goldValue : 1;
+      const s = total > 0 ? silverValue : 1;
+      const denom = g + s;
+
+      const gFrac = denom > 0 ? (g / denom) : 0.5;
+      const sFrac = denom > 0 ? (s / denom) : 0.5;
+
+      goldPortionEl.textContent = total > 0 ? `${fmtUSD(goldValue)} • ${fmtPct(gFrac)}` : `—`;
+      silverPortionEl.textContent = total > 0 ? `${fmtUSD(silverValue)} • ${fmtPct(sFrac)}` : `—`;
+
+      let start = -Math.PI / 2;
+
+      const gEnd = start + (2 * Math.PI * gFrac);
+      pieCtx.beginPath(); pieCtx.moveTo(cx, cy);
+      pieCtx.arc(cx, cy, r, start, gEnd);
+      pieCtx.closePath(); pieCtx.fillStyle = COLOR_GOLD; pieCtx.fill();
+
+      const sEnd = gEnd + (2 * Math.PI * sFrac);
+      pieCtx.beginPath(); pieCtx.moveTo(cx, cy);
+      pieCtx.arc(cx, cy, r, gEnd, sEnd);
+      pieCtx.closePath(); pieCtx.fillStyle = COLOR_SILVER; pieCtx.fill();
+
+      pieCtx.beginPath();
+      pieCtx.arc(cx, cy, r * 0.55, 0, 2 * Math.PI);
+      pieCtx.closePath();
+      pieCtx.fillStyle = COLOR_BG;
+      pieCtx.fill();
+
+      pieCtx.fillStyle = COLOR_TEXT;
+      pieCtx.textAlign = "center";
+      pieCtx.textBaseline = "middle";
+      pieCtx.font = "600 16px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+      pieCtx.fillText("Total", cx, cy - 10);
+      pieCtx.font = "700 18px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+      pieCtx.fillText(fmtUSD(total > 0 ? (goldValue + silverValue) : 0), cx, cy + 14);
+    }
+
+    // -----------------------
+    // Historical parsing
+    // -----------------------
+    // API returns: [ "csvString" ]
+    // csvString -> comma-separated values
+    // remove first value, then pairs: even idx=timestamp seconds, odd idx=price
+    function parseHistoricalResponse(jsonArray) {
+      if (!Array.isArray(jsonArray) || typeof jsonArray[0] !== "string") {
+        throw new Error("Unexpected historical response format (expected array with one CSV string).");
+      }
+      const raw = jsonArray[0].trim();
+      const parts = raw.split(",").map(s => s.trim());
+      parts.shift(); // remove the first value as requested
+
+      const out = [];
+      for (let i = 0; i + 1 < parts.length; i += 2) {
+        const tsSec = Number(parts[i]);
+        const price = Number(parts[i + 1]);
+        if (!Number.isFinite(tsSec) || !Number.isFinite(price)) continue;
+        out.push({ t: new Date(tsSec * 100000), p: price });
+      }
+      // Sort ascending (just in case)
+      out.sort((a, b) => a.t - b.t);
+      return out;
+    }
+
+    async function fetchHistorical() {
+      refreshHistBtn.disabled = true;
+      setStatusOk("Fetching historical data…");
+      try {
+        const [gRes, sRes] = await Promise.all([
+          fetch(`${API_HIST_GOLD}?_=${Date.now()}`, { cache: "no-store" }),
+          fetch(`${API_HIST_SILVER}?_=${Date.now()}`, { cache: "no-store" })
+        ]);
+        if (!gRes.ok) throw new Error(`Gold history HTTP ${gRes.status} ${gRes.statusText}`);
+        if (!sRes.ok) throw new Error(`Silver history HTTP ${sRes.status} ${sRes.statusText}`);
+
+        const gJson = await gRes.json();
+        const sJson = await sRes.json();
+
+        histGold = parseHistoricalResponse(gJson);
+        histSilver = parseHistoricalResponse(sJson);
+
+        if (!histGold.length) throw new Error("Gold history parsed to 0 points.");
+        if (!histSilver.length) throw new Error("Silver history parsed to 0 points.");
+
+        setStatusOk("Historical data updated. Rotating timeframes automatically.");
+        drawHistoricalForCurrentTimeframe();
+      } catch (err) {
+        setStatusErr(
+          "Failed to fetch historical data.\n" +
+          "If you open this file as file://, some browsers block cross-origin requests.\n" +
+          "Serve/host the page for reliable API calls.\n\n" +
+          String(err)
+        );
+      } finally {
+        refreshHistBtn.disabled = false;
+      }
+    }
+
+    function filterByTimeframe(series, tf) {
+      if (!series || !series.length) return [];
+      const lastT = series[series.length - 1].t.getTime(); // use series end as "now"
+      const cutoff = lastT - tf.ms;
+      return series.filter(pt => pt.t.getTime() >= cutoff);
+    }
+
+    // -----------------------
+    // Line chart drawing (canvas)
+    // -----------------------
+    function drawLineChart(ctx, canvas, points, lineColor, tfLabel) {
+      // HiDPI sizing
+      const cssW = canvas.parentElement.clientWidth - 24; // chartCard padding approx
+      const cssH = 220;
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.style.width = cssW + "px";
+      canvas.style.height = cssH + "px";
+      canvas.width = Math.max(1, Math.round(cssW * dpr));
+      canvas.height = Math.max(1, Math.round(cssH * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const W = cssW, H = cssH;
+      const padL = 42, padR = 14, padT = 14, padB = 28;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      // background
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = COLOR_BG;
+      ctx.fillRect(0, 0, W, H);
+
+      // If no data, draw placeholder
+      if (!points || points.length < 2) {
+        ctx.fillStyle = COLOR_TEXT;
+        ctx.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+        ctx.fillText("No data", padL, padT + 14);
+        return;
+      }
+
+      const xs = points.map(p => p.t.getTime());
+      const ys = points.map(p => p.p);
+
+      const xMin = Math.min(...xs), xMax = Math.max(...xs);
+      let yMin = Math.min(...ys), yMax = Math.max(...ys);
+      if (yMin === yMax) { yMin *= 0.999; yMax *= 1.001; }
+
+      // grid lines (horizontal)
+      ctx.strokeStyle = COLOR_GRID;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.85;
+      for (let i = 0; i <= 4; i++) {
+        const y = padT + (plotH * i / 4);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + plotW, y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // axes labels (min/max)
+      ctx.fillStyle = COLOR_TEXT;
+      ctx.font = "600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText(fmtNum(yMax, 2), padL - 6, padT);
+      ctx.fillText(fmtNum(yMin, 2), padL - 6, padT + plotH);
+
+      // x labels (start/end dates)
+      const d0 = new Date(xMin);
+      const d1 = new Date(xMax);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(d0.toISOString().slice(0,10), padL, padT + plotH + 6);
+      ctx.textAlign = "right";
+      ctx.fillText(d1.toISOString().slice(0,10), padL + plotW, padT + plotH + 6);
+
+      // timeframe label (top-right inside chart)
+      ctx.textAlign = "right";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#92a6c0";
+      ctx.fillText(tfLabel, padL + plotW, 6);
+
+      // line
+      function xScale(x) { return padL + ( (x - xMin) / (xMax - xMin) ) * plotW; }
+      function yScale(y) { return padT + (1 - ( (y - yMin) / (yMax - yMin) )) * plotH; }
+
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xScale(xs[0]), yScale(ys[0]));
+      for (let i = 1; i < xs.length; i++) ctx.lineTo(xScale(xs[i]), yScale(ys[i]));
+      ctx.stroke();
+
+      // last point marker
+      ctx.fillStyle = lineColor;
+      ctx.beginPath();
+      ctx.arc(xScale(xs[xs.length - 1]), yScale(ys[ys.length - 1]), 3, 0, 2*Math.PI);
+      ctx.fill();
+    }
+
+    function drawHistoricalForCurrentTimeframe() {
+      const tf = TIMEFRAMES[tfIndex];
+      tfPillGold.textContent = tf.label;
+      tfPillSilver.textContent = tf.label;
+
+      const g = filterByTimeframe(histGold, tf);
+      const s = filterByTimeframe(histSilver, tf);
+
+      drawLineChart(goldLineCtx, goldLineCanvas, g, COLOR_GOLD, `Timeframe: ${tf.label}`);
+      drawLineChart(silverLineCtx, silverLineCanvas, s, COLOR_SILVER, `Timeframe: ${tf.label}`);
+    }
+
+    // -----------------------
+    // Live prices + portfolio value
+    // -----------------------
+    function renderPortfolio() {
+      const goldKg = parseKg(goldKgEl);
+      const silverKg = parseKg(silverKgEl);
+
+      const xau = lastPrices.xauPrice; // USD / troy oz
+      const xag = lastPrices.xagPrice; // USD / troy oz
+
+      const goldValue = (Number.isFinite(xau) ? goldKg * TROY_OZ_PER_KG * xau : NaN);
+      const silverValue = (Number.isFinite(xag) ? silverKg * TROY_OZ_PER_KG * xag : NaN);
+      const totalValue = goldValue + silverValue;
+
+      goldValueEl.textContent = fmtUSD(goldValue);
+      silverValueEl.textContent = fmtUSD(silverValue);
+      totalValueEl.textContent = fmtUSD(totalValue);
+
+      goldMetaEl.textContent = Number.isFinite(xau)
+        ? `xauPrice: ${fmtUSD(xau)} / troy oz • ${fmtNum(TROY_OZ_PER_KG, 6)} oz per kg`
+        : "Waiting for price…";
+
+      silverMetaEl.textContent = Number.isFinite(xag)
+        ? `xagPrice: ${fmtUSD(xag)} / troy oz • ${fmtNum(TROY_OZ_PER_KG, 6)} oz per kg`
+        : "Waiting for price…";
+
+      totalMetaEl.textContent = `Holdings: ${fmtNum(goldKg, 3)} kg gold + ${fmtNum(silverKg, 3)} kg silver`;
+
+      drawPie(Number.isFinite(goldValue) ? goldValue : 0, Number.isFinite(silverValue) ? silverValue : 0);
+    }
+
+    async function fetchLivePrices() {
+      refreshBtn.disabled = true;
+      setStatusOk("Fetching live prices…");
+
+      try {
+        const url = `${API_LIVE}?_=${Date.now()}`;
+        const res = await fetch(url, { method: "GET", cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+
+        const data = await res.json();
+        const item = Array.isArray(data?.items) ? data.items[0] : data;
+
+        const xau = Number(item?.xauPrice);
+        const xag = Number(item?.xagPrice);
+
+        if (!Number.isFinite(xau)) throw new Error("Could not read numeric xauPrice from live response.");
+        if (!Number.isFinite(xag)) throw new Error("Could not read numeric xagPrice from live response.");
+
+        lastPrices = { xauPrice: xau, xagPrice: xag, ts: new Date() };
+        lastUpdateEl.textContent = lastPrices.ts.toLocaleString();
+
+        setStatusOk("Live prices updated.");
+        renderPortfolio();
+      } catch (err) {
+        setStatusErr(
+          "Failed to fetch live prices.\n" +
+          "If you open this file as file://, some browsers block cross-origin requests.\n" +
+          "Serve/host the page for reliable API calls.\n\n" +
+          String(err)
+        );
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    // -----------------------
+    // Rotation timer
+    // -----------------------
+    function startRotation() {
+      setInterval(() => {
+        tfIndex = (tfIndex + 1) % TIMEFRAMES.length;
+        drawHistoricalForCurrentTimeframe();
+      }, ROTATE_SECONDS * 1000);
+    }
+
+    // -----------------------
+    // Events
+    // -----------------------
+    function onAmountChange() {
+      saveAmountsToCookies();
+      renderPortfolio();
+    }
+    goldKgEl.addEventListener("input", onAmountChange);
+    silverKgEl.addEventListener("input", onAmountChange);
+
+    refreshBtn.addEventListener("click", fetchLivePrices);
+    refreshHistBtn.addEventListener("click", fetchHistorical);
+
+    clearBtn.addEventListener("click", () => {
+      deleteCookie(COOKIE_GOLD);
+      deleteCookie(COOKIE_SILVER);
+      goldKgEl.value = "0";
+      silverKgEl.value = "0";
+      setStatusOk("Cleared saved amounts.");
+      renderPortfolio();
+    });
+
+    // Redraw line charts on resize (keeps crisp scaling)
+    window.addEventListener("resize", () => {
+      drawHistoricalForCurrentTimeframe();
+      renderPortfolio();
+    });
+
+    // -----------------------
+    // Init
+    // -----------------------
+    loadSavedAmounts();
+    renderPortfolio();
+    fetchLivePrices();
+    fetchHistorical();
+    startRotation();
+    setInterval(fetchLivePrices, LIVE_REFRESH_SECONDS * 1000);
+  </script>
+</body>
+</html>
