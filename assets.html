@@ -185,7 +185,8 @@
       Parsing rule: response is <code>[ "csv,..." ]</code>; remove first CSV value; then read pairs:
       even index (0,2,4,...) = timestamp seconds; odd index = price.
       <br/><br/>
-      Note: if you open this as <code>file://</code>, some browsers block cross-origin fetch. Host it (even a simple local server) for reliable API calls.
+      Note: this page uses <code>corsproxy.io</code> to bypass CORS restrictions for live data. 
+      If data fails to load, ensure you have an active internet connection.
     </footer>
   </div>
 
@@ -193,9 +194,9 @@
     // -----------------------
     // Config
     // -----------------------
-    const API_LIVE = "https://data-asg.goldprice.org/dbXRates/USD";
-    const API_HIST_GOLD = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0";
-    const API_HIST_SILVER = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
+    const API_LIVE = "https://corsproxy.io/?https://data-asg.goldprice.org/dbXRates/USD";
+    const API_HIST_GOLD = "https://corsproxy.io/?https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0";
+    const API_HIST_SILVER = "https://corsproxy.io/?https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
 
     const LIVE_REFRESH_SECONDS = 60;
     const ROTATE_SECONDS = 30;
@@ -490,8 +491,8 @@
       } catch (err) {
         setStatusErr(
           "Failed to fetch historical data.\n" +
-          "If you opened this file as file://, some browsers block cross-origin requests.\n" +
-          "Serve/host the page for reliable API calls.\n\n" +
+          "Bypassing CORS via proxy… but it still failed.\n" +
+          "Ensure you have an active internet connection.\n\n" +
           String(err)
         );
       } finally {
@@ -821,8 +822,8 @@
       } catch (err) {
         setStatusErr(
           "Failed to fetch live prices.\n" +
-          "If you opened this file as file://, some browsers block cross-origin requests.\n" +
-          "Serve/host the page for reliable API calls.\n\n" +
+          "Bypassing CORS via proxy… but it still failed.\n" +
+          "Ensure you have an active internet connection.\n\n" +
           String(err)
         );
       } finally {
