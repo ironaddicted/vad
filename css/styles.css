@@ -11343,3 +11343,90 @@ section#contact form#contactForm :-ms-input-placeholder {
     transform: scale(1.05);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   }
+/* Consistent project cards and clearer conversion copy. */
+header.masthead .masthead-heading { max-width: 1000px; margin: 0 auto 1.5rem; font-size: clamp(2.5rem, 5.5vw, 4.5rem); line-height: 1.12; }
+header.masthead .masthead-subheading { font-size: clamp(1rem, 2.3vw, 1.5rem); line-height: 1.5; }
+.masthead-description { max-width: 680px; margin: 0 auto 2rem; font-size: 1.15rem; }
+.hero-work-link { display: block; width: fit-content; margin: 1.25rem auto 0; color: inherit; font-weight: 700; text-underline-offset: 5px; }
+#services .col-md-4 { padding: 0 1.5rem; margin-bottom: 1.5rem; }
+#portfolio .portfolio-item { height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 8px; background: #fff; box-shadow: 0 4px 20px rgba(33,37,41,.07); }
+#portfolio .portfolio-item .portfolio-link { width: 100%; aspect-ratio: 4 / 3; overflow: hidden; }
+#portfolio .portfolio-link > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+#portfolio .portfolio-item .portfolio-caption { flex: 1; min-height: 118px; display: flex; flex-direction: column; justify-content: center; }
+#portfolio .portfolio-item .portfolio-caption .portfolio-caption-heading { font-size: 1.2rem; line-height: 1.4; }
+#portfolio .portfolio-item .portfolio-link:focus-visible { outline: 4px solid #212529; outline-offset: -4px; }
+#portfolio .portfolio-item .portfolio-link:focus-visible .portfolio-hover { opacity: 1; }
+#portfolio > .container > .row { row-gap: 1.5rem; }
+#portfolio > .container > .row + .row { margin-top: 2.5rem; }
+.portfolio-modal .modal-body > img { width: 100%; height: auto; max-height: 70vh; object-fit: contain; }
+.portfolio-modal .modal-content h2 { font-size: clamp(1.75rem, 4vw, 3rem); line-height: 1.2; }
+section#contact .section-subheading { color: #dce0e3 !important; line-height: 1.7; max-width: 720px; margin-left: auto; margin-right: auto; }
+@media (max-width: 575px) { .masthead .btn-xl { padding: 1rem 1.25rem; font-size: .95rem; } .page-section h2.section-heading { font-size: 2rem; } }
+
+/* Featured surfaces and client reviews. */
+.section-eyebrow { font-family: Montserrat, sans-serif; text-transform: uppercase; letter-spacing: .14em; font-size: .75rem; font-weight: 700; color: #806313; margin-bottom: .8rem; }
+.gallery-intro { max-width: 640px; margin: 0 auto 2rem; color: #61656a; }
+.gallery-filters { display: flex; justify-content: center; flex-wrap: wrap; gap: .65rem; margin: 0 0 2.5rem; }
+.gallery-filters[hidden], .review-controls[hidden], .project-column[hidden] { display: none !important; }
+.filter-button { border: 1px solid #d9dbdd; background: transparent; color: #343a40; border-radius: 2rem; padding: .65rem 1.2rem; font-size: .9rem; }
+.filter-button[aria-pressed="true"] { color: #fff; background: #252a2d; border-color: #252a2d; }
+.filter-button:hover { border-color: #806313; }
+#portfolio .portfolio-item .portfolio-caption { text-align: left; padding: 1.5rem; justify-content: flex-start; }
+.project-type { font-size: .75rem; color: #806313; font-family: Montserrat, sans-serif; margin-bottom: .6rem; }
+#portfolio .portfolio-item .portfolio-caption .portfolio-caption-heading { font-size: 1.3rem; }
+.project-description { color: #61656a; font-size: .92rem; margin: .65rem 0 0; }
+.project-open { position: absolute; bottom: 1rem; right: 1rem; padding: .45rem .75rem; border-radius: 4px; background: rgba(255,255,255,.95); color: #212529; font-size: .8rem; font-weight: 700; }
+#portfolio .portfolio-link:hover .project-open, #portfolio .portfolio-link:focus-visible .project-open { background: #ffc800; }
+.gallery-followup { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 1.25rem; margin-top: 3rem; }
+.gallery-followup p { margin: 0; font-weight: 700; }
+.gallery-followup > a:last-child { color: #42484c; font-size: .9rem; text-underline-offset: 4px; }
+.project-modal-close { position: absolute; right: 0; top: -2.5rem; }
+.project-modal-description { max-width: 680px; margin: 1.5rem auto 2rem; color: #61656a; }
+.project-credit { font-size: .8rem; color: #61656a; }
+.project-credit a { color: #6e5715; }
+.reviews-section { background: #eeeae2; overflow: hidden; }
+.reviews-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; margin-bottom: 2rem; }
+.reviews-heading > div:first-child { max-width: 690px; }
+.reviews-heading p:last-child { color: #61656a; margin-bottom: 0; }
+.review-controls { display: flex; flex-shrink: 0; gap: .5rem; }
+.review-controls button { min-height: 44px; padding: .65rem .85rem; background: transparent; border: 1px solid #b8b3a8; border-radius: 5px; color: #252a2d; }
+.review-controls button:hover { background: #fff; }
+.review-track { display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; padding: 4px 2px 20px; scrollbar-width: thin; scrollbar-color: #a89e89 transparent; }
+.review-card { flex: 0 0 calc((100% - 48px) / 3); min-width: 0; background: #fff; border: 1px solid #e2ded6; border-radius: 8px; padding: 1.75rem; margin: 0; scroll-snap-align: start; display: flex; flex-direction: column; }
+.review-service { font-family: Montserrat, sans-serif; font-size: .75rem; color: #806313; margin-bottom: 1.5rem; }
+.review-card blockquote { font-size: 1.25rem; line-height: 1.6; flex: 1; margin-bottom: 2rem; }
+.review-card blockquote p { margin: 0; }
+.review-card figcaption { display: flex; align-items: center; gap: .8rem; font-family: Montserrat, sans-serif; }
+.review-avatar { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; background: #f4efe2; color: #756025; border-radius: 50%; font-size: .8rem; }
+.review-card strong { display: block; font-size: .9rem; }
+.review-card figcaption a { display: block; font-size: .75rem; color: #60666a; margin-top: .25rem; text-underline-offset: 3px; }
+.review-footer { margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: .8rem; }
+.review-footer p { margin: 0; color: #61656a; }
+.review-footer a { color: #343a40; text-underline-offset: 4px; }
+.review-footer > div { display: flex; flex-wrap: wrap; gap: 1.2rem; }
+#service-area img { max-width: 100%; height: auto; }
+@media (max-width: 991px) { .reviews-heading { flex-direction: column; align-items: flex-start; } .review-card { flex-basis: calc((100% - 24px) / 2); } }
+@media (max-width: 575px) { .review-card { flex-basis: 88%; padding: 1.4rem; } .reviews-heading h2.section-heading { font-size: 1.9rem; } .gallery-followup { flex-direction: column; } }
+@media (prefers-reduced-motion: reduce) { .review-track { scroll-behavior: auto; } }
+
+/* Keep navigation readable over both photographs and light sections. */
+#mainNav, #mainNav.navbar-shrink { background-color: #fff; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
+#mainNav .navbar-nav .nav-item .nav-link { color: #343a40; }
+#mainNav .navbar-nav .nav-item .nav-link:hover, #mainNav .navbar-nav .nav-item .nav-link.active { color: #806313; }
+#mainNav .navbar-toggler { color: #343a40; border-color: #ced4da; }
+
+/* A warm living space with a restrained overlay for legible hero copy. */
+header.masthead {
+  color: #fff;
+  background-color: #252821;
+  background-image: linear-gradient(90deg, rgba(15,22,19,.76), rgba(15,22,19,.48)), url("../assets/img/living-space-hero.webp");
+  background-position: center, center 55%;
+}
+header.masthead .masthead-description { color: #f1f2ed; }
+header.masthead .masthead-subheading { color: #f1e5c8; }
+header.masthead .btn-primary { background: #ffc800; border-color: #ffc800; color: #212529; }
+header.masthead .btn-primary:hover { background: #e5b400; border-color: #e5b400; }
+header.masthead .hero-work-link { color: #fff; }
+@media (max-width: 575px) {
+  header.masthead { background-position: center, 60% center; background-image: linear-gradient(rgba(15,22,19,.67), rgba(15,22,19,.67)), url("../assets/img/living-space-hero.webp"); }
+}

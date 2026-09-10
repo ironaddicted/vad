@@ -1,0 +1,106 @@
+{
+  "verifiedOn": "2026-09-10",
+  "note": "Project copy is original, based on visible photos and profile details. Review text is a short verbatim excerpt, not a full review. Display names are preserved. Review selection is editorial and does not imply an aggregate rating. Google contributor links open reviewer profiles; Thumbtack links open the business review section.",
+  "projects": [
+    {
+      "id": 7,
+      "title": "Classic White Backsplash",
+      "category": "backsplash",
+      "label": "Ceramic tile installation",
+      "image": "white-subway-backsplash.webp",
+      "description": "White subway tile creates a clean, continuous backdrop behind the sink and countertops, complementing the cabinetry and warm brass fixtures.",
+      "source": "https://g.co/kgs/7Uc7n9J",
+      "sourceName": "Google",
+      "credit": "Project photo shared by Julie Haneline on Google."
+    },
+    {
+      "id": 8,
+      "title": "A Modern Tile Finish",
+      "category": "backsplash",
+      "label": "Porcelain backsplash",
+      "image": "porcelain-backsplash.webp",
+      "detail": "porcelain-backsplash-detail.webp",
+      "description": "A gray porcelain backsplash brings subtle texture to this kitchen. The horizontal tile layout and contrasting grout lines complement the cabinetry and frame the cooking area.",
+      "source": "https://www.thumbtack.com/nc/matthews/remodeling-contractors/vad-constructions/service/495462164766130192",
+      "sourceName": "Thumbtack",
+      "credit": "Project photos shared by Azat s. on Thumbtack."
+    },
+    {
+      "id": 9,
+      "title": "Warmth Underfoot",
+      "category": "flooring",
+      "label": "LVP flooring · Matthews, NC",
+      "image": "office-flooring.webp",
+      "detail": "office-flooring-detail.webp",
+      "description": "Luxury vinyl plank flooring brings warmth and a wood-inspired finish to this home office. Part of a room renovation that transformed an unfinished space into a comfortable place to work.",
+      "source": "https://www.thumbtack.com/nc/matthews/remodeling-contractors/vad-constructions/service/495462164766130192",
+      "sourceName": "Thumbtack",
+      "credit": "Project photos shared by VAD Constructions on Thumbtack."
+    }
+  ],
+  "reviews": [
+    {
+      "name": "Julie H.",
+      "platform": "Thumbtack",
+      "service": "Backsplash installation",
+      "excerpt": "very precise, detail-oriented",
+      "url": "https://www.thumbtack.com/nc/matthews/remodeling-contractors/vad-constructions/service/495462164766130192#ServicePageReviewsSection"
+    },
+    {
+      "name": "Ramesh Reddy",
+      "platform": "Google",
+      "service": "Luxury vinyl plank flooring",
+      "excerpt": "He is courteous, efficient",
+      "url": "https://www.google.com/maps/contrib/116163993305493553454/reviews?hl=en"
+    },
+    {
+      "name": "Azat s.",
+      "platform": "Thumbtack",
+      "service": "Porcelain backsplash",
+      "excerpt": "professional, knowledgeable and punctual",
+      "url": "https://www.thumbtack.com/nc/matthews/remodeling-contractors/vad-constructions/service/495462164766130192#ServicePageReviewsSection"
+    },
+    {
+      "name": "Tiffany McGuire",
+      "platform": "Google",
+      "service": "Bedroom & closet flooring",
+      "excerpt": "They were very meticulous in their work",
+      "url": "https://www.google.com/maps/contrib/114601970153750666119/reviews?hl=en"
+    },
+    {
+      "name": "Jill H.",
+      "platform": "Thumbtack",
+      "service": "Bathroom makeover",
+      "excerpt": "professional and courteous throughout the project",
+      "url": "https://www.thumbtack.com/nc/matthews/remodeling-contractors/vad-constructions/service/495462164766130192#ServicePageReviewsSection"
+    },
+    {
+      "name": "Trevor Flanary",
+      "platform": "Google",
+      "service": "Tile floor installation",
+      "excerpt": "Reasonable price and excellent final product",
+      "url": "https://www.google.com/maps/contrib/107613786044172940589/reviews?hl=en"
+    },
+    {
+      "name": "Franklin Y.",
+      "platform": "Thumbtack",
+      "service": "Master bathroom renovation",
+      "excerpt": "We appreciate his communication and frequent updates.",
+      "url": "https://www.thumbtack.com/nc/matthews/remodeling-contractors/vad-constructions/service/495462164766130192#ServicePageReviewsSection"
+    },
+    {
+      "name": "Daniel McDowell",
+      "platform": "Google",
+      "service": "Kitchen renovation",
+      "excerpt": "I highly recommend this company.",
+      "url": "https://www.google.com/maps/contrib/112796811987623865807/reviews?hl=en"
+    }
+  ],
+  "hero": {
+    "file": "assets/img/living-space-hero.webp",
+    "photographer": "Clay Banks",
+    "source": "https://unsplash.com/photos/a-living-room-filled-with-furniture-and-a-wooden-floor-mqjBCnVhFY0",
+    "license": "Unsplash License",
+    "usage": "Decorative living-space inspiration photo, not a VAD project."
+  }
+}
