@@ -11430,3 +11430,8 @@ header.masthead .hero-work-link { color: #fff; }
 @media (max-width: 575px) {
   header.masthead { background-position: center, 60% center; background-image: linear-gradient(rgba(15,22,19,.67), rgba(15,22,19,.67)), url("../assets/img/kitchen-wide-hero.jpg"); }
 }
+
+/* Familiar five-star rating treatment, rendered without an icon dependency. */
+.review-card .review-service { margin-bottom: .75rem; }
+.review-stars { display: flex; gap: 3px; color: #fbbc04; margin-bottom: 1.1rem; }
+.review-stars svg { display: block; flex-shrink: 0; }
