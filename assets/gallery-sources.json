@@ -97,10 +97,10 @@
     }
   ],
   "hero": {
-    "file": "assets/img/living-space-hero.webp",
-    "photographer": "Clay Banks",
-    "source": "https://unsplash.com/photos/a-living-room-filled-with-furniture-and-a-wooden-floor-mqjBCnVhFY0",
-    "license": "Unsplash License",
-    "usage": "Decorative living-space inspiration photo, not a VAD project."
+    "file": "assets/img/kitchen-wide-hero.jpg",
+    "photographer": "Christopher Moon",
+    "source": "https://www.pexels.com/photo/modern-kitchen-interior-with-elegant-lighting-32025867/",
+    "license": "Pexels License",
+    "usage": "Decorative kitchen inspiration photo, not a VAD project."
   }
 }

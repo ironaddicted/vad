@@ -11415,11 +11415,11 @@ section#contact .section-subheading { color: #dce0e3 !important; line-height: 1.
 #mainNav .navbar-nav .nav-item .nav-link:hover, #mainNav .navbar-nav .nav-item .nav-link.active { color: #806313; }
 #mainNav .navbar-toggler { color: #343a40; border-color: #ced4da; }
 
-/* A warm living space with a restrained overlay for legible hero copy. */
+/* A modern kitchen with a restrained overlay for legible hero copy. */
 header.masthead {
   color: #fff;
   background-color: #252821;
-  background-image: linear-gradient(90deg, rgba(15,22,19,.76), rgba(15,22,19,.48)), url("../assets/img/living-space-hero.webp");
+  background-image: linear-gradient(90deg, rgba(15,22,19,.76), rgba(15,22,19,.48)), url("../assets/img/kitchen-wide-hero.jpg");
   background-position: center, center 55%;
 }
 header.masthead .masthead-description { color: #f1f2ed; }
@@ -11428,5 +11428,5 @@ header.masthead .btn-primary { background: #ffc800; border-color: #ffc800; color
 header.masthead .btn-primary:hover { background: #e5b400; border-color: #e5b400; }
 header.masthead .hero-work-link { color: #fff; }
 @media (max-width: 575px) {
-  header.masthead { background-position: center, 60% center; background-image: linear-gradient(rgba(15,22,19,.67), rgba(15,22,19,.67)), url("../assets/img/living-space-hero.webp"); }
+  header.masthead { background-position: center, 60% center; background-image: linear-gradient(rgba(15,22,19,.67), rgba(15,22,19,.67)), url("../assets/img/kitchen-wide-hero.jpg"); }
 }
