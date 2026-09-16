@@ -14,6 +14,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', event => {
+            const categoryButton = event.target.closest('#portfolio .gallery-filters button[data-filter]');
+            if (categoryButton) {
+                track('project_category_click', { project_category: categoryButton.dataset.filter });
+                return;
+            }
             const link = event.target.closest('a[href="#contact"]');
             if (!link) return;
             track('estimate_click', {

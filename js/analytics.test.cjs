@@ -38,6 +38,21 @@ assert.equal(active.events.at(-1)[2].send_to, 'G-XMQGDWGHL2', 'Custom events tar
 assert.equal(active.events[0][0], 'config');
 assert.equal(active.events[0][1], 'G-XMQGDWGHL2', 'VAD GA4 configured');
 
+const categories = analytics(true);
+assert.equal(categories.events.filter(e => e[1] === 'project_category_click').length, 0, 'Default category is not a click');
+for (const category of ['all', 'backsplash', 'flooring', 'renovation', 'renovation']) {
+    categories.handlers.click({ target: { closest: selector => selector === '#portfolio .gallery-filters button[data-filter]'
+        ? { dataset: { filter: category } } : null } });
+    const sent = categories.events.at(-1);
+    assert.equal(sent[1], 'project_category_click');
+    assert.equal(sent[2].project_category, category);
+    assert.equal(sent[2].send_to, 'G-XMQGDWGHL2');
+}
+assert.equal(categories.events.filter(e => e[1] === 'project_category_click').length, 5);
+const beforeOtherClick = categories.events.length;
+categories.handlers.click({ target: { closest: () => null } });
+assert.equal(categories.events.length, beforeOtherClick, 'Unrelated clicks are ignored');
+
 async function form(status, valid = true, networkFailure = false) {
     let submit, calls = 0;
     const events = [], ads = [], button = { disabled: false, style: {} };

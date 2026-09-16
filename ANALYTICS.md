@@ -4,12 +4,13 @@ VAD's GA4 measurement ID `G-XMQGDWGHL2` is configured in `js/analytics.js`. Coll
 
 1. The supplied VAD measurement ID is configured. Confirm the corresponding Web data stream belongs to the VAD website.
 2. Publish the updated website. Use Tag Assistant / GA4 DebugView to verify page views and the events below. Check Realtime with a normal visit as well. Browser blockers can prevent collection.
-3. Under Admin > Custom definitions, create event-scoped dimensions for `section_name`, `cta_location`, and `error_type`. Create a custom metric for `duration_seconds` with unit Seconds.
+3. Under Admin > Custom definitions, create event-scoped dimensions for `section_name`, `cta_location`, `project_category`, and `error_type`. Create a custom metric for `duration_seconds` with unit Seconds.
 4. Mark `generate_lead` as a key event. Link the VAD property to Google Ads if campaign reporting is wanted. The site already records an Ads conversion for the same successful form request: avoid making an imported GA4 lead a second primary Ads conversion for that same action.
 
 | Event | Meaning |
 | --- | --- |
 | `estimate_click` | Contact/estimate link clicked, with its placement |
+| `project_category_click` | Project filter clicked, with `project_category`: `all`, `backsplash`, `flooring`, or `renovation`. Counts each click (including repeated selections), not the initial default filter. |
 | `estimate_start` | First form edit per page load |
 | `estimate_submit` | Valid submission attempt |
 | `generate_lead` | Backend returned a successful HTTP response |
