@@ -11432,6 +11432,22 @@ header.masthead .hero-work-link { color: #fff; }
 }
 
 /* Familiar five-star rating treatment, rendered without an icon dependency. */
+/* Keep the estimate action outside the collapsed menu at every screen size. */
+#mainNav .nav-estimate { order: 2; margin-left: 1rem; color: #212529; white-space: nowrap; font-size: .85rem; padding: .75rem 1rem; }
+#mainNav .navbar-toggler { order: 3; margin-left: .5rem; }
+#mainNav .navbar-collapse { order: 4; }
+#contact { scroll-margin-top: 110px; }
+@media (min-width: 992px) {
+  #mainNav .navbar-collapse { order: 1; }
+}
+@media (max-width: 991px) {
+  #mainNav .navbar-brand { margin-right: auto; }
+  #mainNav .nav-estimate { margin-left: 0; }
+}
+@media (max-width: 380px) {
+  #mainNav .nav-estimate { font-size: .75rem; padding: .65rem .5rem; }
+  #mainNav .navbar-toggler { padding: .65rem .5rem; }
+}
 .review-card .review-service { margin-bottom: .75rem; }
 .review-stars { display: flex; gap: 3px; color: #fbbc04; margin-bottom: 1.1rem; }
 .review-stars svg { display: block; flex-shrink: 0; }

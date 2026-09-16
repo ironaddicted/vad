@@ -10,6 +10,8 @@
 
   gtag('config', 'AW-16582460982');
 </script>
+        <!-- VAD GA4 configuration and engagement tracking. -->
+        <script defer src="js/analytics.js"></script>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="Backsplash tile installation, flooring, and kitchen and bathroom renovations by VAD Constructions. Explore real projects and client reviews, then tell us about your space." />
@@ -30,6 +32,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNav">
             <div class="container">
                 <a class="navbar-brand" href="#page-top"><img src="assets/img/vad_constructions_logo.svg" alt="VAD Constructions" /></a>
+                <a class="btn btn-primary nav-estimate" href="#contact" data-cta-location="header">Free Estimate</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                     Menu
                     <i class="fas fa-bars ms-1"></i>
@@ -51,7 +54,7 @@
             <div class="container">
                 <div class="masthead-subheading">Thoughtful renovations. Beautiful everyday living.</div>
                 <h1 class="masthead-heading">Love the home you live in.</h1><p class="masthead-description">Beautiful backsplashes, fresh flooring, and thoughtful kitchen and bathroom renovations. Make the spaces you use every day feel like home.</p>
-                <a class="btn btn-primary btn-xl text-uppercase" href="#contact">Let's Talk About Your Project</a><a class="hero-work-link" href="#portfolio">Explore our work &rarr;</a>
+                <a class="btn btn-primary btn-xl text-uppercase" href="#contact" data-cta-location="hero">Request a Free Estimate</a><a class="hero-work-link" href="#portfolio">Explore our work &rarr;</a>
             </div>
         </header>
         <!-- Services-->
@@ -647,7 +650,9 @@
     function handleSubmit(event) {
       event.preventDefault();
 	
-      if (validateForm()) {
+      if (validateForm() && !submitButton.disabled) {
+        submitButton.disabled = true;
+        window.vadAnalytics?.track('estimate_submit');
         // Prepare data for submission
         const formData = {
           name: document.getElementById('name').value,
@@ -664,6 +669,7 @@
         })
         .then(response => {
           if (response.ok) {
+            window.vadAnalytics?.track('generate_lead');
             // Track conversion
             gtag('event', 'conversion', {
               'send_to': 'AW-16582460982/cr4VCNeZ2bMZELaMkeM9',
@@ -676,11 +682,15 @@
             // Hide submit button
             submitButton.style.display = 'none';
           } else {
+            submitButton.disabled = false;
+            window.vadAnalytics?.track('estimate_error', { error_type: 'server' });
             // Handle error
             console.error('Error submitting form:', response.status);
           }
         })
         .catch(error => {
+          submitButton.disabled = false;
+          window.vadAnalytics?.track('estimate_error', { error_type: 'network' });
           console.error('Error submitting form:', error);
         });
       }
