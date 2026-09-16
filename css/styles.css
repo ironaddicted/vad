@@ -11433,7 +11433,9 @@ header.masthead .hero-work-link { color: #fff; }
 
 /* Familiar five-star rating treatment, rendered without an icon dependency. */
 /* Keep the estimate action outside the collapsed menu at every screen size. */
-#mainNav .nav-estimate { order: 2; margin-left: 1rem; color: #212529; white-space: nowrap; font-size: .85rem; padding: .75rem 1rem; }
+#mainNav .nav-estimate { order: 2; margin-left: 1rem; color: #fff; background-color: #000; border-color: #000; white-space: nowrap; font-size: .85rem; padding: .75rem 1rem; }
+#mainNav .nav-estimate:hover, #mainNav .nav-estimate:focus-visible, #mainNav .nav-estimate:active { color: #000; background-color: #fff; border-color: #000; }
+#mainNav .nav-estimate:focus-visible { outline: 2px solid #000; outline-offset: 3px; box-shadow: none; }
 #mainNav .navbar-toggler { order: 3; margin-left: .5rem; }
 #mainNav .navbar-collapse { order: 4; }
 #contact { scroll-margin-top: 110px; }
