@@ -2,7 +2,7 @@
 (() => {
     'use strict';
     // Google Analytics > Admin > Data streams > Web > Measurement ID.
-    const measurementId = 'G-XMQGDWGHL2';
+    const measurementId = 'G-3ZWY4ES6FR';
     const enabled = /^G-[A-Z0-9]+$/.test(measurementId);
     function track(name, parameters = {}) {
         if (!enabled || typeof window.gtag !== 'function') return;
@@ -26,9 +26,13 @@
                     (link.closest('.modal') ? 'project' : link.closest('nav') ? 'navigation' : 'portfolio')
             });
         });
-        document.querySelector('#contactForm')?.addEventListener('input', () => {
+        const contactForm = document.querySelector('#contactForm');
+        function trackFormStart(event) {
+            if (event.target.id === 'website') return;
             track('estimate_start');
-        }, { once: true });
+            contactForm.removeEventListener('input', trackFormStart);
+        }
+        contactForm?.addEventListener('input', trackFormStart);
 
         // Attribute active time to the section occupying the largest visible area.
         // This also works for sections taller than the viewport, such as the gallery.
