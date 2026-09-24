@@ -672,7 +672,6 @@
             return;
         }
 
-        window.vadAnalytics?.track('estimate_submit');
         // Prepare data for submission only after the honeypot check.
         const formData = {
           name: document.getElementById('name').value,
@@ -681,38 +680,45 @@
           message: document.getElementById('message').value
         };
 
-        // Make AJAX call
-		
-        fetch('https://htmczrw2tgityftpxj5535hdye0zreqf.lambda-url.us-east-1.on.aws', {
-          method: "POST",          
-          body: JSON.stringify(formData)
-        })
-        .then(response => {
-          if (response.ok) {
-            window.vadAnalytics?.track('generate_lead');
-            // Track conversion
-            gtag('event', 'conversion', {
-              'send_to': 'AW-16582460982/cr4VCNeZ2bMZELaMkeM9',
-              'value': 1.0,
-              'currency': 'USD'
-            });
+        const submitForm = () => {
+          // Make AJAX call
+          fetch('https://htmczrw2tgityftpxj5535hdye0zreqf.lambda-url.us-east-1.on.aws', {
+            method: "POST",          
+            body: JSON.stringify(formData)
+          })
+          .then(response => {
+            if (response.ok) {
+              window.vadAnalytics?.track('generate_lead');
+              // Track conversion
+              gtag('event', 'conversion', {
+                'send_to': 'AW-16582460982/cr4VCNeZ2bMZELaMkeM9',
+                'value': 1.0,
+                'currency': 'USD'
+              });
 
-            // Show submission message
-            submissionMessage.style.display = 'block';
-            // Hide submit button
-            submitButton.style.display = 'none';
-          } else {
+              // Show submission message
+              submissionMessage.style.display = 'block';
+              // Hide submit button
+              submitButton.style.display = 'none';
+            } else {
+              submitButton.disabled = false;
+              window.vadAnalytics?.track('estimate_error', { error_type: 'server' });
+              // Handle error
+              console.error('Error submitting form:', response.status);
+            }
+          })
+          .catch(error => {
             submitButton.disabled = false;
-            window.vadAnalytics?.track('estimate_error', { error_type: 'server' });
-            // Handle error
-            console.error('Error submitting form:', response.status);
-          }
-        })
-        .catch(error => {
-          submitButton.disabled = false;
-          window.vadAnalytics?.track('estimate_error', { error_type: 'network' });
-          console.error('Error submitting form:', error);
-        });
+            window.vadAnalytics?.track('estimate_error', { error_type: 'network' });
+            console.error('Error submitting form:', error);
+          });
+        };
+
+        if (window.vadAnalytics) {
+          window.vadAnalytics.track('estimate_submit', { event_callback: submitForm });
+        } else {
+          submitForm();
+        }
       }
     }
 

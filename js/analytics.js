@@ -6,7 +6,13 @@
     const enabled = /^G-[A-Z0-9]+$/.test(measurementId);
     function track(name, parameters = {}) {
         if (!enabled || typeof window.gtag !== 'function') return;
-        window.gtag('event', name, { ...parameters, send_to: measurementId });
+        if (parameters.event_callback) {
+            const callback = parameters.event_callback;
+            delete parameters.event_callback;
+            window.gtag('event', name, { ...parameters, send_to: measurementId, event_callback: callback });
+        } else {
+            window.gtag('event', name, { ...parameters, send_to: measurementId });
+        }
     }
     window.vadAnalytics = { track };
     if (!enabled) return;

@@ -19,7 +19,16 @@ function analytics(enabled) {
         querySelectorAll: () => [section],
         querySelector: selector => selector === '#mainNav' ? { getBoundingClientRect: () => ({ bottom: 100 }) } : selector === '#contactForm' ? contactForm : null
     };
-    const window = { innerHeight: 800, gtag: (...args) => events.push(args), addEventListener: (name, fn) => { windowHandlers[name] = fn; } };
+    const window = {
+        innerHeight: 800,
+        gtag: (...args) => {
+            events.push(args);
+            if (args[0] === 'event' && args[2] && typeof args[2].event_callback === 'function') {
+                setImmediate(args[2].event_callback);
+            }
+        },
+        addEventListener: (name, fn) => { windowHandlers[name] = fn; }
+    };
     vm.runInNewContext(enabled ? source : source.replace(/const measurementId = '[^']*';/, "const measurementId = '';"),
         { window, document, performance: { now: () => now }, setInterval: fn => { tick = fn; } });
     if (enabled) handlers.DOMContentLoaded();
@@ -75,7 +84,16 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
     vm.runInNewContext(inline, {
         document: { addEventListener: (_, fn) => fn(), getElementById: id => elements[id] },
-        window: { vadAnalytics: { track: (...args) => events.push(args) } },
+        window: {
+            vadAnalytics: {
+                track: (name, params = {}) => {
+                    events.push([name, params]);
+                    if (params.event_callback) {
+                        setImmediate(params.event_callback);
+                    }
+                }
+            }
+        },
         gtag: (...args) => ads.push(args), console: { error: () => {} },
         fetch: () => { calls++; return networkFailure ? Promise.reject(new Error('offline')) : Promise.resolve({ ok: status === 200, status }); }
     });
