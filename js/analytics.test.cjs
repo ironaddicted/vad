@@ -53,9 +53,9 @@ active.step(); active.step();
 assert.equal(active.events.length, count, 'Hidden tabs add no time');
 assert.equal(active.events.find(e => e[1] === 'section_engagement')[2].duration_seconds, 2);
 active.window.vadAnalytics.track('generate_lead');
-assert.equal(active.events.at(-1)[2].send_to, 'G-XMQGDWGHL2', 'Custom events target only VAD GA4');
+assert.equal(active.events.at(-1)[2].send_to, 'G-3ZWY4ES6FR', 'Custom events target only VAD GA4');
 assert.equal(active.events[0][0], 'config');
-assert.equal(active.events[0][1], 'G-XMQGDWGHL2', 'VAD GA4 configured');
+assert.equal(active.events[0][1], 'G-3ZWY4ES6FR', 'VAD GA4 configured');
 
 const categories = analytics(true);
 assert.equal(categories.events.filter(e => e[1] === 'project_category_click').length, 0, 'Default category is not a click');
@@ -65,7 +65,7 @@ for (const category of ['all', 'backsplash', 'flooring', 'renovation', 'renovati
     const sent = categories.events.at(-1);
     assert.equal(sent[1], 'project_category_click');
     assert.equal(sent[2].project_category, category);
-    assert.equal(sent[2].send_to, 'G-XMQGDWGHL2');
+    assert.equal(sent[2].send_to, 'G-3ZWY4ES6FR');
 }
 assert.equal(categories.events.filter(e => e[1] === 'project_category_click').length, 5);
 const beforeOtherClick = categories.events.length;
@@ -73,7 +73,11 @@ categories.handlers.click({ target: { closest: () => null } });
 assert.equal(categories.events.length, beforeOtherClick, 'Unrelated clicks are ignored');
 
 async function form(status, valid = true, networkFailure = false, honeypot = '') {
-    let submit, calls = 0;
+    let submit, calls = 0, resolveResponse, rejectResponse;
+    const pendingResponse = new Promise((resolve, reject) => {
+        resolveResponse = resolve;
+        rejectResponse = reject;
+    });
     const events = [], ads = [], button = { disabled: false, style: {} };
     const elements = {
         contactForm: { checkValidity: () => valid, addEventListener: (_, fn) => { submit = fn; } },
@@ -88,16 +92,22 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
             vadAnalytics: {
                 track: (name, params = {}) => {
                     events.push([name, params]);
-                    if (params.event_callback) {
-                        setImmediate(params.event_callback);
-                    }
+                    // Deliberately never invoke analytics callbacks (e.g. blocked tag).
                 }
             }
         },
         gtag: (...args) => ads.push(args), console: { error: () => {} },
-        fetch: () => { calls++; return networkFailure ? Promise.reject(new Error('offline')) : Promise.resolve({ ok: status === 200, status }); }
+        fetch: () => { calls++; return pendingResponse; }
     });
     submit({ preventDefault() {} }); submit({ preventDefault() {} });
+    assert.equal(calls, valid && !honeypot ? 1 : 0, 'Request starts without an analytics callback');
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(ads.length, 0, 'No Ads conversion while Lambda response is pending');
+    assert.equal(events.filter(e => e[0] === 'generate_lead').length, 0, 'No GA4 lead before Lambda responds');
+    if (calls) {
+        if (networkFailure) rejectResponse(new Error('offline'));
+        else resolveResponse({ ok: status >= 200 && status < 300, status });
+    }
     await new Promise(resolve => setImmediate(resolve));
     const allowed = valid && !honeypot;
     assert.equal(calls, allowed ? 1 : 0, 'Duplicate, invalid, or honeypot submissions blocked');
@@ -113,7 +123,7 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     assert.ok(!JSON.stringify(events).includes('Private'), 'No form contents in analytics');
 }
 (async () => {
-    await form(200); await form(500); await form(200, false); await form(200, true, true);
+    await form(200); await form(403); await form(500); await form(503); await form(200, false); await form(200, true, true);
     await form(200, true, false, 'https://spam.example');
     await form(200, true, false, '   ');
     console.log('PASS: analytics, submission success/failure, duplicate protection, and honeypot blocking without requests or conversions');

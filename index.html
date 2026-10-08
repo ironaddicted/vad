@@ -689,7 +689,7 @@
           .then(response => {
             if (response.ok) {
               window.vadAnalytics?.track('generate_lead');
-              // Track conversion
+              // Count a conversion only after Lambda returns HTTP success.
               gtag('event', 'conversion', {
                 'send_to': 'AW-16582460982/cr4VCNeZ2bMZELaMkeM9',
                 'value': 1.0,
@@ -714,11 +714,9 @@
           });
         };
 
-        if (window.vadAnalytics) {
-          window.vadAnalytics.track('estimate_submit', { event_callback: submitForm });
-        } else {
-          submitForm();
-        }
+        // Submission must not depend on Google Analytics loading or its callback.
+        submitForm();
+        window.vadAnalytics?.track('estimate_submit');
       }
     }
 
