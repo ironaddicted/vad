@@ -103,6 +103,8 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     assert.equal(calls, valid && !honeypot ? 1 : 0, 'Request starts without an analytics callback');
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(ads.length, 0, 'No Ads conversion while Lambda response is pending');
+    assert.equal(events.filter(e => e[0] === 'estimate_submit_attempt').length, valid && !honeypot ? 1 : 0, 'One diagnostic attempt for a valid request');
+    assert.equal(events.filter(e => e[0] === 'estimate_submit').length, 0, 'An attempt must not emit the historical submission conversion event');
     assert.equal(events.filter(e => e[0] === 'generate_lead').length, 0, 'No GA4 lead before Lambda responds');
     if (calls) {
         if (networkFailure) rejectResponse(new Error('offline'));

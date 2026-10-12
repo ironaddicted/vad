@@ -1,6 +1,6 @@
 # VAD Analytics setup
 
-VAD's GA4 measurement ID `G-XMQGDWGHL2` is configured in `js/analytics.js`. Collection begins when these changes are published. The existing Google Ads tag and successful-submission conversion remain enabled.
+VAD's GA4 measurement ID `G-3ZWY4ES6FR` is configured in `js/analytics.js`. Collection begins when these changes are published. The existing Google Ads tag and successful-submission conversion remain enabled.
 
 1. The supplied VAD measurement ID is configured. Confirm the corresponding Web data stream belongs to the VAD website.
 2. Publish the updated website. Use Tag Assistant / GA4 DebugView to verify page views and the events below. Check Realtime with a normal visit as well. Browser blockers can prevent collection.
@@ -12,7 +12,7 @@ VAD's GA4 measurement ID `G-XMQGDWGHL2` is configured in `js/analytics.js`. Coll
 | `estimate_click` | Contact/estimate link clicked, with its placement |
 | `project_category_click` | Project filter clicked, with `project_category`: `all`, `backsplash`, `flooring`, or `renovation`. Counts each click (including repeated selections), not the initial default filter. |
 | `estimate_start` | First form edit per page load |
-| `estimate_submit` | Valid submission attempt |
+| `estimate_submit_attempt` | Valid submission attempt; diagnostic only, not a confirmed lead |
 | `generate_lead` | Backend returned a successful HTTP response |
 | `estimate_error` | Failed server response or network request |
 | `section_view` | Section was dominant in the viewport for about one active second; once per section per page load |
