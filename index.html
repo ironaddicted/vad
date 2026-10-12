@@ -12,11 +12,13 @@
 </script>
         <!-- VAD GA4 configuration and engagement tracking. -->
         <script defer src="js/analytics.js"></script>
+        <script defer src="js/lead-context.js"></script>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="Backsplash tile installation, flooring, and kitchen and bathroom renovations by VAD Constructions. Explore real projects and client reviews, then tell us about your space." />
+        <meta name="description" content="Kitchen and bathroom remodeling in Charlotte, NC by VAD Constructions. Explore real renovation, shower, flooring, and backsplash projects and request a free estimate." />
+        <link rel="canonical" href="https://vadconstructions.com/" />
         <meta name="author" content="" />
-        <title>VAD Constructions - Home Renovations</title>
+        <title>Kitchen &amp; Bathroom Remodeling in Charlotte | VAD Constructions</title>
         <!-- Favicon-->
         <link rel="icon" type="image/x-icon" href="assets/favicon.png" />
         <!-- Font Awesome icons (free version)-->
@@ -26,7 +28,8 @@
         <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700" rel="stylesheet" type="text/css" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="css/styles.css" rel="stylesheet" />
-    </head>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "@id": "https://vadconstructions.com/#organization", "name": "VAD Constructions", "url": "https://vadconstructions.com/", "telephone": "+17047509110"}</script>
+</head>
     <body id="page-top">
         <!-- Navigation-->
         <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNav">
@@ -54,11 +57,16 @@
         <header class="masthead">
             <div class="container">
                 <div class="masthead-subheading">Thoughtful renovations. Beautiful everyday living.</div>
-                <h1 class="masthead-heading">Love the home you live in.</h1><p class="masthead-description">Beautiful backsplashes, fresh flooring, and thoughtful kitchen and bathroom renovations. Make the spaces you use every day feel like home.</p>
+                <h1 class="masthead-heading">Kitchen &amp; Bathroom Remodeling in Charlotte, NC</h1><p class="masthead-description">Thoughtful kitchen updates, bathroom renovations, custom showers, flooring, and backsplash installation. Explore our real projects and tell us what you want to change.</p>
                 <a class="btn btn-primary btn-xl text-uppercase" href="#contact" data-cta-location="hero">Request a Free Estimate</a><a class="hero-work-link" href="#portfolio">Explore our work &rarr;</a>
             </div>
         </header>
         <!-- Services-->
+        <div class="container py-4 text-center service-paths" aria-label="Explore renovation services">
+          <a class="btn btn-outline-dark m-2" href="/kitchen-remodeling/">Kitchen Remodeling</a>
+          <a class="btn btn-outline-dark m-2" href="/bathroom-remodeling/">Bathroom &amp; Shower Remodeling</a>
+          <a class="btn btn-outline-dark m-2" href="https://queencitybacksplash.com/">Kitchen Backsplash Installation</a>
+        </div>
         <section class="page-section" id="services">
             <div class="container">
                 <div class="text-center">
@@ -360,13 +368,15 @@
                         <div class="col-md-6">
                             <div class="form-group form-group-textarea mb-md-0">
                                 <!-- Message input-->
-                                <textarea class="form-control" id="message" aria-label="Project details" placeholder="Tell us about your project, location, and ideal timing" data-sb-validations="required"></textarea>
+                                <textarea class="form-control" id="message" aria-label="Project details (optional)" placeholder="Project details (optional): what you want to change, your ZIP code, and ideal timing"></textarea>
                                 <div class="invalid-feedback" data-sb-feedback="message:required">A message is required.</div>
                             </div>
                         </div>
                     </div>
                     <div class="text-center">
 						<button class="btn btn-primary btn-xl text-uppercase" id="submitButton" type="submit">Get My Free Estimate</button>
+                        <p id="submissionError" class="alert alert-danger mt-3" role="alert" hidden>We couldn’t confirm your request. Please try again, or call/text <a href="tel:7047509110">(704) 750-9110</a>.</p>
+                        <p class="text-white mt-3">No measurements needed to get started. Prefer to talk? <a class="text-white" href="tel:7047509110">Call (704) 750-9110</a> or <a class="text-white" href="sms:+17047509110">text project photos</a>.</p>
 						<p id="submissionMessage" style="display: none;" class="alert alert-success" role="alert" >Thank you! Your estimate request has been sent. We will be in touch to discuss the details.</p>
 					</div>
                 </form>
@@ -677,10 +687,12 @@
           name: document.getElementById('name').value,
           email: document.getElementById('email').value,
           phone: document.getElementById('phone').value,
-          message: document.getElementById('message').value
+          message: [document.getElementById('message').value, window.vadLeadContext?.()].filter(Boolean).join('\n\n')
         };
 
         const submitForm = () => {
+          const errorNotice = document.getElementById('submissionError');
+          if (errorNotice) errorNotice.hidden = true;
           // Make AJAX call
           fetch('https://htmczrw2tgityftpxj5535hdye0zreqf.lambda-url.us-east-1.on.aws', {
             method: "POST",          
@@ -701,6 +713,7 @@
               // Hide submit button
               submitButton.style.display = 'none';
             } else {
+              if (errorNotice) errorNotice.hidden = false;
               submitButton.disabled = false;
               window.vadAnalytics?.track('estimate_error', { error_type: 'server' });
               // Handle error
@@ -708,6 +721,7 @@
             }
           })
           .catch(error => {
+            if (errorNotice) errorNotice.hidden = false;
             submitButton.disabled = false;
             window.vadAnalytics?.track('estimate_error', { error_type: 'network' });
             console.error('Error submitting form:', error);
