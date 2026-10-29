@@ -1,0 +1,159 @@
+{
+  "addedOn": "2026-10-29",
+  "photos": [
+    {
+      "service": "kitchen",
+      "image": "kitchen-green-backsplash.webp",
+      "alt": "Green tile backsplash above a granite kitchen countertop",
+      "caption": "Green tile brings color and texture to the cooking area.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_0986.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "kitchen",
+      "image": "kitchen-dark-cabinets-island.webp",
+      "alt": "Kitchen with dark cabinets, a large island and recessed lighting",
+      "caption": "Dark cabinetry and a central island define this kitchen layout.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_1594.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "kitchen",
+      "image": "kitchen-gray-cabinets-mosaic.webp",
+      "alt": "Gray kitchen cabinets with a mosaic tile backsplash and white countertops",
+      "caption": "Gray cabinetry, white worktops, and a mosaic tile finish.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_1779.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "kitchen",
+      "image": "kitchen-gray-cabinets-wide.webp",
+      "alt": "Kitchen with gray cabinets, white countertops and stainless steel appliances",
+      "caption": "A wider view of the cabinetry, work surfaces, and appliances.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20241018_162303761.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-gray-walls-tub.webp",
+      "alt": "Bathroom with a freestanding tub, glass shower and gray walls",
+      "caption": "A freestanding tub and glass shower in a coordinated gray bathroom.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_1558.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-dark-vanity.webp",
+      "alt": "Bathroom with a dark vanity, white sink and gray floor tile",
+      "caption": "A dark vanity with a bright countertop and tiled floor.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_2354.jpg",
+      "width": 718,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-tall-tile-shower.webp",
+      "alt": "Tall tiled shower beside a toilet and vanity",
+      "caption": "A tiled shower and fixtures arranged within a compact bathroom.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_2355.jpg",
+      "width": 718,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-gray-glass-shower.webp",
+      "alt": "Gray tiled shower with glass sliding doors and pebble-style flooring",
+      "caption": "Gray wall tile, a glass enclosure, and a textured shower floor.",
+      "credit": "From the VAD project photo collection.",
+      "original": "IMG_2873.jpeg",
+      "width": 718,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-gray-shower-niche.webp",
+      "alt": "Gray tiled shower with black fixtures, a niche and glass enclosure",
+      "caption": "A recessed niche and black fixtures complete the gray tile shower.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20240211_215430162.jpg",
+      "width": 718,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-mosaic-floor-detail.webp",
+      "alt": "Low view of mosaic bathroom floor tile leading to a glass shower and vanity",
+      "caption": "A closer look at the mosaic floor and its transition into the shower.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20240415_225054550.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "4.webp",
+      "alt": "Bathroom with dark blue shower tile, a white vanity and marble-pattern floor",
+      "caption": "Dark blue tile creates a focal point behind the glass shower.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20240427_210949324.jpg",
+      "width": 683,
+      "height": 911
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-gray-tile-walk-in.webp",
+      "alt": "Walk-in shower with gray wall tile, a pebble-style floor and white trim",
+      "caption": "Gray tile and a textured floor define the walk-in shower.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20240907_224237746.MP.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-blue-vanity.webp",
+      "alt": "Bathroom with a blue vanity, white countertop and marble-pattern flooring",
+      "caption": "A blue vanity adds contrast to the light floor and countertop.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20240907_224249865.jpg",
+      "width": 1276,
+      "height": 957
+    },
+    {
+      "service": "bathroom",
+      "image": "bathroom-gray-shower-glass.webp",
+      "alt": "Gray tile shower with black hardware and a glass enclosure",
+      "caption": "A completed view of the gray tile shower and glass enclosure.",
+      "credit": "From the VAD project photo collection.",
+      "original": "PXL_20240925_154144980.jpg",
+      "width": 718,
+      "height": 957
+    }
+  ],
+  "excluded": [
+    {
+      "original": "IMG_1387.JPG",
+      "reason": "Already displayed as porcelain-backsplash.webp"
+    },
+    {
+      "original": "IMG_2461.jpg",
+      "reason": "Same view already displayed as white-subway-backsplash.webp"
+    },
+    {
+      "original": "IMG_3072.jpg",
+      "reason": "Very similar view to the existing white subway shower photo"
+    }
+  ]
+}

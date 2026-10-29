@@ -9,6 +9,7 @@ HOME = (ROOT / 'index.html').read_text(encoding='utf-8')
 FORM_SCRIPT = re.findall(r'<script>(.*?)</script>', HOME, re.S)[-1]
 REVIEWS = json.loads((ROOT / 'assets/gallery-sources.json').read_text())['reviews']
 E = html.escape
+LOCAL_PHOTOS = json.loads((ROOT / 'assets/local-service-photos.json').read_text(encoding='utf-8'))['photos']
 EXTRA_PHOTOS = {
  'kitchen': [
   ('white-subway-backsplash.webp', 'White subway tile backsplash with brass fixtures', 'White subway tile and warm brass details.', 'Photo shared by Julie Haneline on Google.'),
@@ -73,6 +74,9 @@ for service, data in SERVICES.items():
  faqs=''.join(f'<details><summary>{E(q)}</summary><p>{E(a)}</p></details>' for q,a in data['faqs'])
  reviews=''.join(f'<figure class="card review"><blockquote>“{E(r["excerpt"])}”</blockquote><figcaption><strong>{E(r["name"])}</strong><p class="micro">{E(r["service"])}</p><a href="{E(r["url"],quote=True)}" target="_blank" rel="noopener noreferrer">Read on {E(r["platform"])} ↗</a></figcaption></figure>' for r in REVIEWS if r['name'] in data['review_names'])
  photos = [(data['image'], data['alt'], data['caption'], 'Selected from the VAD Google Photos library.'), (data['second'], data['secondalt'], data['secondcaption'], 'From the existing VAD project portfolio.')] + EXTRA_PHOTOS[service]
+ photos += [(p['image'], p['alt'], p['caption'], p['credit']) for p in LOCAL_PHOTOS if p['service'] == service]
+ if len({p[0] for p in photos}) != len(photos):
+  raise ValueError(f'Duplicate image in {service} gallery')
  gallery = ''.join(project_photo(*photo) for photo in photos)
  org={'@type':'HomeAndConstructionBusiness','@id':'https://vadconstructions.com/#organization','name':'VAD Constructions','url':'https://vadconstructions.com/','telephone':'+17047509110'}
  schema={'@context':'https://schema.org','@graph':[org,{'@type':'Service','@id':url+'#service','name':data['title'],'serviceType':service.capitalize()+' remodeling','url':url,'provider':{'@id':org['@id']},'areaServed':[{'@type':'City','name':n} for n in ['Charlotte','Matthews','Mint Hill','Weddington','Waxhaw','Monroe','Pineville','Stallings','Wesley Chapel']]},{'@type':'BreadcrumbList','itemListElement':[{'@type':'ListItem','position':1,'name':'Home','item':'https://vadconstructions.com/'},{'@type':'ListItem','position':2,'name':service.capitalize()+' remodeling','item':url}]}]}
