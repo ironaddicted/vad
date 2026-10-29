@@ -13,8 +13,7 @@ LOCAL_PHOTOS = json.loads((ROOT / 'assets/local-service-photos.json').read_text(
 EXTRA_PHOTOS = {
  'kitchen': [
   ('white-subway-backsplash.webp', 'White subway tile backsplash with brass fixtures', 'White subway tile and warm brass details.', 'Photo shared by Julie Haneline on Google.'),
-  ('porcelain-backsplash.webp', 'Gray porcelain kitchen backsplash framing the cooking area', 'A gray porcelain backsplash with a horizontal tile layout.', 'Photo shared by Azat s. on Thumbtack.'),
-  ('porcelain-backsplash-detail.webp', 'Close view of the porcelain kitchen backsplash and grout lines', 'A closer look at the tile finish and grout lines.', 'Detail from the same Thumbtack backsplash project.')],
+  ('porcelain-backsplash.webp', 'Gray porcelain kitchen backsplash framing the cooking area', 'A gray porcelain backsplash with a horizontal tile layout.', 'Photo shared by Azat s. on Thumbtack.')],
  'bathroom': [
   ('bathroom-subway-shower.webp', 'Glass shower with white subway tile, black fixtures and a linear drain', 'White subway tile, black fixtures, and a glass shower enclosure.', 'Selected from the VAD Google Photos library.'),
   ('bathroom-gray-tub.webp', 'White bathtub with gray tile surround and black plumbing fixtures', 'A bathtub framed by gray tile and black fixtures.', 'Selected from the VAD Google Photos library.')]
