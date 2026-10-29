@@ -86,7 +86,7 @@
         <button id="clearBtn" type="button">Clear saved amounts</button>
         <span class="muted">Live auto-refresh: <span id="autoEvery">60</span>s</span>
         <span class="muted">History rotation: <span id="rotEvery">5</span>s</span>
-        <span class="muted">Last live update: <span id="lastUpdate">—</span></span>
+        <span class="muted">Quote timestamp: <span id="lastUpdate">—</span></span>
       </div>
 
       <div class="kpis">
@@ -177,16 +177,11 @@
       </div>
     </div>
 
+    <p id="historyStatus" class="status" role="status"></p>
     <footer>
-      Live source: <code>https://data-asg.goldprice.org/dbXRates/USD</code><br/>
-      History sources:
-      <code>https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0</code> and
-      <code>https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0</code><br/>
-      Parsing rule: response is <code>[ "csv,..." ]</code>; remove first CSV value; then read pairs:
-      even index (0,2,4,...) = timestamp seconds; odd index = price.
-      <br/><br/>
-      Note: this page uses <code>corsproxy.io</code> to bypass CORS restrictions for live data. 
-      If data fails to load, ensure you have an active internet connection.
+      Live spot prices: <a href="https://gold-api.com/" style="color:#a9b7ca">Gold API</a>, USD per troy ounce.
+      Portfolio values exclude dealer premiums and selling costs.<br/>
+      Historical source: GoldPrice.org. When that source is unavailable, live values continue independently.
     </footer>
   </div>
 
@@ -194,9 +189,10 @@
     // -----------------------
     // Config
     // -----------------------
-    const API_LIVE = "https://corsproxy.io/?https://data-asg.goldprice.org/dbXRates/USD";
-    const API_HIST_GOLD = "https://corsproxy.io/?https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0";
-    const API_HIST_SILVER = "https://corsproxy.io/?https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
+    const API_LIVE_GOLD = "https://api.gold-api.com/price/XAU";
+    const API_LIVE_SILVER = "https://api.gold-api.com/price/XAG";
+    const API_HIST_GOLD = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0";
+    const API_HIST_SILVER = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
 
     const LIVE_REFRESH_SECONDS = 60;
     const ROTATE_SECONDS = 30;
@@ -458,8 +454,8 @@
       for (let i = 0; i + 1 < parts.length; i += 2) {
         const tsSec = Number(parts[i]);
         const price = Number(parts[i + 1]);
-        if (!Number.isFinite(tsSec) || !Number.isFinite(price)) continue;
-        out.push({ t: new Date(tsSec * 100000), p: price });
+        if (!Number.isFinite(tsSec) || !Number.isFinite(price) || tsSec <= 0 || price <= 0 || !Number.isFinite(new Date(tsSec * 1000).getTime())) continue;
+        out.push({ t: new Date(tsSec * 1000), p: price });
       }
       out.sort((a, b) => a.t - b.t);
       return out;
@@ -467,11 +463,13 @@
 
     async function fetchHistorical() {
       refreshHistBtn.disabled = true;
-      setStatusOk("Fetching historical data…");
+      const historyStatus = document.getElementById("historyStatus");
+      historyStatus.className = "status muted";
+      historyStatus.textContent = "Fetching historical data…";
       try {
         const [gRes, sRes] = await Promise.all([
-          fetch(`${API_HIST_GOLD}?_=${Date.now()}`, { cache: "no-store" }),
-          fetch(`${API_HIST_SILVER}?_=${Date.now()}`, { cache: "no-store" })
+          fetch(API_HIST_GOLD, { cache: "no-store", signal: AbortSignal.timeout(12000) }),
+          fetch(API_HIST_SILVER, { cache: "no-store", signal: AbortSignal.timeout(12000) })
         ]);
 
         if (!gRes.ok) throw new Error(`Gold history HTTP ${gRes.status} ${gRes.statusText}`);
@@ -486,15 +484,13 @@
         if (!histGold.length) throw new Error("Gold history parsed to 0 points.");
         if (!histSilver.length) throw new Error("Silver history parsed to 0 points.");
 
-        setStatusOk("Historical data updated. Rotating timeframes automatically.");
+        historyStatus.className = "status ok";
+        historyStatus.textContent = "Historical data updated. Rotating timeframes automatically.";
         drawHistoricalForCurrentTimeframe();
       } catch (err) {
-        setStatusErr(
-          "Failed to fetch historical data.\n" +
-          "Bypassing CORS via proxy… but it still failed.\n" +
-          "Ensure you have an active internet connection.\n\n" +
-          String(err)
-        );
+        historyStatus.className = "status err";
+        historyStatus.textContent = "Historical charts unavailable: the history provider could not be reached or denied the request. Live portfolio values work independently.";
+        drawHistoricalForCurrentTimeframe();
       } finally {
         refreshHistBtn.disabled = false;
       }
@@ -801,29 +797,32 @@
       setStatusOk("Fetching live prices…");
 
       try {
-        const url = `${API_LIVE}?_=${Date.now()}`;
-        const res = await fetch(url, { method: "GET", cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-
-        const data = await res.json();
-        const item = Array.isArray(data?.items) ? data.items[0] : data;
-
-        const xau = Number(item?.xauPrice);
-        const xag = Number(item?.xagPrice);
-
-        if (!Number.isFinite(xau)) throw new Error("Could not read numeric xauPrice from live response.");
-        if (!Number.isFinite(xag)) throw new Error("Could not read numeric xagPrice from live response.");
-
-        lastPrices = { xauPrice: xau, xagPrice: xag, ts: new Date() };
+        const [goldResponse, silverResponse] = await Promise.all([
+          fetch(API_LIVE_GOLD, { signal: AbortSignal.timeout(12000) }),
+          fetch(API_LIVE_SILVER, { signal: AbortSignal.timeout(12000) })
+        ]);
+        if (!goldResponse.ok || !silverResponse.ok) {
+          throw new Error(`Price provider HTTP ${goldResponse.status} / ${silverResponse.status}`);
+        }
+        const [gold, silver] = await Promise.all([goldResponse.json(), silverResponse.json()]);
+        const xau = Number(gold.price), xag = Number(silver.price);
+        const goldTime = Date.parse(gold.updatedAt), silverTime = Date.parse(silver.updatedAt);
+        if (gold.symbol !== "XAU" || silver.symbol !== "XAG" ||
+            !Number.isFinite(xau) || xau <= 0 || !Number.isFinite(xag) || xag <= 0 ||
+            !Number.isFinite(goldTime) || !Number.isFinite(silverTime)) {
+          throw new Error("The price provider returned invalid prices or timestamps.");
+        }
+        lastPrices = { xauPrice: xau, xagPrice: xag, ts: new Date(Math.min(goldTime, silverTime)) };
         lastUpdateEl.textContent = lastPrices.ts.toLocaleString();
 
-        setStatusOk("Live prices updated.");
+        const stale = Date.now() - lastPrices.ts.getTime() > 15 * 60 * 1000;
+        if (stale) setStatusErr("Showing the latest available quote. The provider timestamp is over 15 minutes old.");
+        else setStatusOk("Live spot prices updated (USD per troy ounce).");
         renderPortfolio();
       } catch (err) {
         setStatusErr(
           "Failed to fetch live prices.\n" +
-          "Bypassing CORS via proxy… but it still failed.\n" +
-          "Ensure you have an active internet connection.\n\n" +
+          "Previously loaded values, if any, remain at the last update shown. Try Refresh live prices again.\n\n" +
           String(err)
         );
       } finally {

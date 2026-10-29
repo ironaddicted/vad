@@ -7,3 +7,9 @@ Deploy the tracked files through GitHub and a fast-forward pull in `/var/www/vad
 Inquiry messages now include the website and entry path plus any tagged campaign or Google click ID. Session storage retains the campaign while navigating to another service page; unavailable storage does not block the form. This context does not enter Analytics events. The contact form exposes a visible retry/call fallback for failed HTTP requests.
 
 The SEO metadata avoids invented addresses, opening hours, rating totals, and rich-result promises. Service pages have unique canonical URLs and are linked from the homepage. Search Console submission and existing Google Business Profile review remain separate tasks.
+
+## Portfolio page
+
+The portfolio is `assets.html`; `/assets/` is also the site's static-asset directory. Production Apache virtual hosts redirect only the exact `/assets` and `/assets/` URLs to `/assets.html` with `RedirectMatch 302 ^/assets/?$ /assets.html`. Keep nested asset URLs unchanged.
+
+Live portfolio quotes use Gold API's public XAU/XAG endpoints. GoldPrice.org history can return 403; the page reports that failure separately from live values. Restoring history requires an available historical provider (Gold API's history endpoints require a server-side API key).
