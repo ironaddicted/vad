@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const source = readFileSync(`${__dirname}/analytics.js`, 'utf8');
 const html = readFileSync(`${__dirname}/../index.html`, 'utf8');
 
-function analytics(enabled, path = '/') {
+function analytics(enabled, path = '/', search = '') {
     let now = 0, tick;
     const events = [], handlers = {}, windowHandlers = {};
     const formHandlers = {};
@@ -20,7 +20,7 @@ function analytics(enabled, path = '/') {
         querySelector: selector => selector === '#mainNav' ? { getBoundingClientRect: () => ({ bottom: 100 }) } : selector === '#contactForm' ? contactForm : null
     };
     const window = {
-        location: { pathname: path },
+        location: { pathname: path, search },
         innerHeight: 800,
         gtag: (...args) => {
             events.push(args);
@@ -31,7 +31,7 @@ function analytics(enabled, path = '/') {
         addEventListener: (name, fn) => { windowHandlers[name] = fn; }
     };
     vm.runInNewContext(enabled ? source : source.replace(/const measurementId = '[^']*';/, "const measurementId = '';"),
-        { window, document, performance: { now: () => now }, setInterval: fn => { tick = fn; } });
+        { window, document, URLSearchParams, performance: { now: () => now }, setInterval: fn => { tick = fn; } });
     if (enabled) handlers.DOMContentLoaded();
     return { events, document, handlers, formHandlers, window, step: () => { now += 1000; tick(); } };
 }
@@ -73,13 +73,13 @@ const beforeOtherClick = categories.events.length;
 categories.handlers.click({ target: { closest: () => null } });
 assert.equal(categories.events.length, beforeOtherClick, 'Unrelated clicks are ignored');
 
-async function form(status, valid = true, networkFailure = false, honeypot = '') {
+async function form(status, valid = true, networkFailure = false, honeypot = '', tagAvailable = true) {
     let submit, calls = 0, resolveResponse, rejectResponse;
     const pendingResponse = new Promise((resolve, reject) => {
         resolveResponse = resolve;
         rejectResponse = reject;
     });
-    const events = [], ads = [], button = { disabled: false, style: {} };
+    const events = [], ads = [], redirects = [], timers = [], button = { disabled: false, style: {} };
     const elements = {
         contactForm: { checkValidity: () => valid, addEventListener: (_, fn) => { submit = fn; } },
         submitButton: button, submissionMessage: { style: {} },
@@ -88,8 +88,9 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     };
     const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
     vm.runInNewContext(inline, {
-        document: { addEventListener: (_, fn) => fn(), getElementById: id => elements[id] },
+        document: { body: { dataset: { service: 'kitchen' } }, addEventListener: (_, fn) => fn(), getElementById: id => elements[id] },
         window: {
+            location: { assign: url => redirects.push(url) },
             vadAnalytics: {
                 track: (name, params = {}) => {
                     events.push([name, params]);
@@ -97,13 +98,14 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
                 }
             }
         },
-        gtag: (...args) => ads.push(args), console: { error: () => {} },
+        gtag: tagAvailable ? (...args) => ads.push(args) : undefined, console: { error: () => {} }, setTimeout: fn => timers.push(fn),
         fetch: () => { calls++; return pendingResponse; }
     });
     submit({ preventDefault() {} }); submit({ preventDefault() {} });
     assert.equal(calls, valid && !honeypot ? 1 : 0, 'Request starts without an analytics callback');
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(ads.length, 0, 'No Ads conversion while Lambda response is pending');
+    assert.equal(redirects.length, 0, 'No redirect while backend response is pending');
     assert.equal(events.filter(e => e[0] === 'estimate_submit_attempt').length, valid && !honeypot ? 1 : 0, 'One diagnostic attempt for a valid request');
     assert.equal(events.filter(e => e[0] === 'estimate_submit').length, 0, 'An attempt must not emit the historical submission conversion event');
     assert.equal(events.filter(e => e[0] === 'generate_lead').length, 0, 'No GA4 lead before Lambda responds');
@@ -115,7 +117,11 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     const allowed = valid && !honeypot;
     assert.equal(calls, allowed ? 1 : 0, 'Duplicate, invalid, or honeypot submissions blocked');
     assert.equal(events.filter(e => e[0] === 'generate_lead').length, allowed && status === 200 && !networkFailure ? 1 : 0);
-    assert.equal(ads.length, allowed && status === 200 && !networkFailure ? 1 : 0);
+    assert.equal(ads.length, allowed && status === 200 && !networkFailure && tagAvailable ? 1 : 0);
+    timers.forEach(fn => fn());
+    events.filter(e => e[0] === 'generate_lead').forEach(e => e[1].event_callback());
+    timers.forEach(fn => fn());
+    assert.deepEqual(redirects, allowed && status === 200 && !networkFailure ? ['/quote-thank-you/?service=kitchen'] : [], 'Only backend success redirects, once, even with blocked analytics');
     if (valid && honeypot) {
         assert.equal(events.length, 0, 'Blocked submissions do not pollute analytics');
         assert.equal(elements.submissionMessage.style.display, 'block');
@@ -129,6 +135,7 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     await form(200); await form(403); await form(500); await form(503); await form(200, false); await form(200, true, true);
     await form(200, true, false, 'https://spam.example');
     await form(200, true, false, '   ');
+    await form(200, true, false, '', false);
     console.log('PASS: analytics, submission success/failure, duplicate protection, and honeypot blocking without requests or conversions');
 })();
 
@@ -141,4 +148,10 @@ for (const service of ['kitchen', 'bathroom']) {
     tracked.handlers.click({ target: { closest: selector => selector === 'a[href^="tel:"]' ? phone : null } });
     assert.equal(tracked.events.at(-1)[1], 'phone_click');
     assert.equal(tracked.events.at(-1)[2].service_type, service);
+}
+
+for (const service of ['kitchen', 'bathroom', 'general', 'invalid']) {
+    const thanks = analytics(true, '/quote-thank-you/', `?service=${service}`);
+    assert.equal(thanks.events[0][2].content_group, service === 'invalid' ? 'general' : service);
+    assert.equal(thanks.events.filter(e => e[1] === 'generate_lead' || e[1] === 'conversion').length, 0, 'Opening or refreshing thank-you page never generates a conversion');
 }

@@ -23,3 +23,10 @@ Selected project photos were downloaded from the owner's Google Photos library a
 GA4 remains G-3ZWY4ES6FR. The page path determines `service_type` (kitchen, bathroom, general), and `content_group` identifies the page family. Successful backend responses emit `generate_lead`; attempts emit `estimate_submit_attempt`; errors emit `estimate_error`. `phone_click` and `sms_click` represent link clicks, not completed calls or qualified leads. Form contents are never custom Analytics event parameters. In GA4, register service_type as an event-scoped custom dimension for reporting if not already present. Use generate_lead as the lead key event; keep imported GA4 equivalents secondary in Ads when the direct Ads form action is primary.
 
 The primary Ads action and enhanced-conversion diagnostics must be verified in the account. Publishing website code does not establish that diagnostics have cleared or that enhanced customer-data collection is configured. No new collection of email or phone data by measurement tags was added in this change.
+
+### October 29: expanded galleries and quote confirmation
+- Kitchen gallery now has five photos; bathroom has four. Added two owner Google Photos images and reused three previously verified Google/Thumbtack project photos; provenance in assets/service-photo-sources.json.
+- All main/service quote forms redirect to /quote-thank-you/?service=kitchen|bathroom|general only after a successful backend response. Conversion events still fire once at confirmed submission; thank-you page views are not a separate conversion.
+- Redirect waits for the GA4 callback with a 1.5-second fallback, including when the Google tag is blocked. The noindex confirmation page contains no client details.
+- GA4 uses shared event names with event-scoped service_type and content_group. The confirmation page preserves the service through a validated, non-personal query parameter.
+- Keep GA4 imported lead actions secondary in Ads to avoid counting the direct Ads lead and its GA4 import as separate primary leads. Do not add an unconditional thank-you URL conversion on top of the existing success event.

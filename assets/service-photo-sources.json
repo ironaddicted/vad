@@ -1,0 +1,11 @@
+{
+  "selectedOn": "2026-10-29",
+  "note": "Additional service-page photos selected from the owner's Google Photos and the previously verified Thumbtack/Google project gallery. Original files and motion videos are not published. Website copies are resized WebP files without original EXIF metadata.",
+  "photos": [
+    {"file": "bathroom-subway-shower.webp", "source": "Owner Google Photos", "original": "IMG_3074.heic", "photoDate": "2026-09-02", "description": "White subway tile shower, black hardware and linear drain"},
+    {"file": "bathroom-gray-tub.webp", "source": "Owner Google Photos", "original": "PXL_20240211_215531093.jpg", "photoDate": "2024-02-11", "description": "White bathtub with gray tile surround"},
+    {"file": "white-subway-backsplash.webp", "source": "Previously verified Google project gallery", "credit": "Julie Haneline", "reference": "gallery-sources.json, project 7"},
+    {"file": "porcelain-backsplash.webp", "source": "Previously verified Thumbtack project gallery", "credit": "Azat s.", "reference": "gallery-sources.json, project 8"},
+    {"file": "porcelain-backsplash-detail.webp", "source": "Previously verified Thumbtack project gallery", "credit": "Azat s.", "reference": "gallery-sources.json, project 8; alternate detail of the same project"}
+  ]
+}

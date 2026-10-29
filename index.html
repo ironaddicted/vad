@@ -700,9 +700,21 @@
           })
           .then(response => {
             if (response.ok) {
-              window.vadAnalytics?.track('generate_lead');
+              // Redirect only after the backend accepts the request. A page view
+              // of the thank-you URL is deliberately not a lead conversion.
+              const service = document.body.dataset.service || 'general';
+              const thankYouUrl = '/quote-thank-you/?service=' + encodeURIComponent(service);
+              let redirected = false;
+              const showThankYou = () => {
+                if (redirected) return;
+                redirected = true;
+                window.location.assign(thankYouUrl);
+              };
+              // Keep navigation working when a tag is blocked or never calls back.
+              setTimeout(showThankYou, 1500);
+              window.vadAnalytics?.track('generate_lead', { event_callback: showThankYou, event_timeout: 1200 });
               // Count a conversion only after Lambda returns HTTP success.
-              gtag('event', 'conversion', {
+              if (typeof gtag === 'function') gtag('event', 'conversion', {
                 'send_to': 'AW-16582460982/cr4VCNeZ2bMZELaMkeM9',
                 'value': 1.0,
                 'currency': 'USD'

@@ -5,7 +5,10 @@
     const measurementId = 'G-3ZWY4ES6FR';
     const enabled = /^G-[A-Z0-9]+$/.test(measurementId);
     const path = window.location?.pathname || '/';
-    const service = path.startsWith('/kitchen-remodeling') ? 'kitchen' :
+    const thankYouService = path.startsWith('/quote-thank-you/') ?
+        new URLSearchParams(window.location.search).get('service') : null;
+    const service = ['kitchen', 'bathroom', 'general'].includes(thankYouService) ? thankYouService :
+        path.startsWith('/kitchen-remodeling') ? 'kitchen' :
         path.startsWith('/bathroom-remodeling') ? 'bathroom' : 'general';
     function track(name, parameters = {}) {
         if (!enabled || typeof window.gtag !== 'function') return;
