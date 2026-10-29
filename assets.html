@@ -145,7 +145,7 @@
           <div class="historyHeader">
             <div>
               <div class="historyTitle">Gold (XAU) historical</div>
-              <div class="subtle">USD per troy oz</div>
+              <div class="subtle">Monthly average · USD per troy oz</div>
             </div>
             <div class="pill" id="tfPillGold">—</div>
           </div>
@@ -156,7 +156,7 @@
           <div class="historyHeader">
             <div>
               <div class="historyTitle">Silver (XAG) historical</div>
-              <div class="subtle">USD per troy oz</div>
+              <div class="subtle">Monthly average · USD per troy oz</div>
             </div>
             <div class="pill" id="tfPillSilver">—</div>
           </div>
@@ -169,7 +169,7 @@
         <div class="historyHeader">
           <div>
             <div class="historyTitle">Net worth (Gold + Silver)</div>
-            <div class="subtle">USD (based on your kg holdings and historical prices)</div>
+            <div class="subtle">USD · current holdings valued at historical monthly averages</div>
           </div>
           <div class="pill" id="tfPillNet">—</div>
         </div>
@@ -181,7 +181,7 @@
     <footer>
       Live spot prices: <a href="https://gold-api.com/" style="color:#a9b7ca">Gold API</a>, USD per troy ounce.
       Portfolio values exclude dealer premiums and selling costs.<br/>
-      Historical source: GoldPrice.org. When that source is unavailable, live values continue independently.
+      History: <a href="https://www.worldbank.org/en/research/commodity-markets" style="color:#a9b7ca">World Bank Pink Sheet</a> monthly averages, USD per troy ounce. Updated when new monthly data is published; these are not daily closing prices.
     </footer>
   </div>
 
@@ -191,8 +191,7 @@
     // -----------------------
     const API_LIVE_GOLD = "https://api.gold-api.com/price/XAU";
     const API_LIVE_SILVER = "https://api.gold-api.com/price/XAG";
-    const API_HIST_GOLD = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAU/0";
-    const API_HIST_SILVER = "https://data-asg.goldprice.org/GetDataHistorical/USD-XAG/0";
+    const API_HISTORY = "/portfolio-data/metals-history.json";
 
     const LIVE_REFRESH_SECONDS = 60;
     const ROTATE_SECONDS = 30;
@@ -214,10 +213,10 @@
 
     // Rotation timeframes
     const TIMEFRAMES = [
-      { key: "1M",  label: "1 month",  ms: 30  * 24 * 60 * 60 * 1000 },
-      { key: "6M",  label: "6 months", ms: 183 * 24 * 60 * 60 * 1000 },
-      { key: "1Y",  label: "1 year",   ms: 365 * 24 * 60 * 60 * 1000 },
-      { key: "10Y", label: "10 years", ms: 3652 * 24 * 60 * 60 * 1000 }
+      { key: "6M", label: "6 months", ms: 183 * 86400000 },
+      { key: "1Y", label: "1 year", ms: 365 * 86400000 },
+      { key: "5Y", label: "5 years", ms: 1827 * 86400000 },
+      { key: "10Y", label: "10 years", ms: 3652 * 86400000 }
     ];
 
     // -----------------------
@@ -442,54 +441,46 @@
     // -----------------------
     // Historical parsing
     // -----------------------
-    function parseHistoricalResponse(jsonArray) {
-      if (!Array.isArray(jsonArray) || typeof jsonArray[0] !== "string") {
-        throw new Error("Unexpected historical response format (expected array with one CSV string).");
+    function parseHistoricalResponse(data) {
+      if (data?.frequency !== "monthly" || data?.unit !== "USD per troy ounce" || !Array.isArray(data.records) || data.records.length < 120) {
+        throw new Error("Unexpected history format.");
       }
-      const raw = jsonArray[0].trim();
-      const parts = raw.split(",").map(s => s.trim());
-      parts.shift(); // remove the first value as requested
-
-      const out = [];
-      for (let i = 0; i + 1 < parts.length; i += 2) {
-        const tsSec = Number(parts[i]);
-        const price = Number(parts[i + 1]);
-        if (!Number.isFinite(tsSec) || !Number.isFinite(price) || tsSec <= 0 || price <= 0 || !Number.isFinite(new Date(tsSec * 1000).getTime())) continue;
-        out.push({ t: new Date(tsSec * 1000), p: price });
+      const gold = [], silver = [];
+      let previous = -Infinity;
+      for (const row of data.records) {
+        const time = Date.parse(row.date + "T00:00:00Z");
+        if (!/^\d{4}-\d{2}-01$/.test(row.date) || !Number.isFinite(time) || time <= previous ||
+            !Number.isFinite(row.gold) || row.gold <= 0 || !Number.isFinite(row.silver) || row.silver <= 0) {
+          throw new Error("Invalid historical observation.");
+        }
+        previous = time;
+        gold.push({t: new Date(time), p: row.gold});
+        silver.push({t: new Date(time), p: row.silver});
       }
-      out.sort((a, b) => a.t - b.t);
-      return out;
+      return {gold, silver};
     }
 
     async function fetchHistorical() {
       refreshHistBtn.disabled = true;
       const historyStatus = document.getElementById("historyStatus");
       historyStatus.className = "status muted";
-      historyStatus.textContent = "Fetching historical data…";
+      historyStatus.textContent = "Fetching monthly historical data…";
       try {
-        const [gRes, sRes] = await Promise.all([
-          fetch(API_HIST_GOLD, { cache: "no-store", signal: AbortSignal.timeout(12000) }),
-          fetch(API_HIST_SILVER, { cache: "no-store", signal: AbortSignal.timeout(12000) })
-        ]);
-
-        if (!gRes.ok) throw new Error(`Gold history HTTP ${gRes.status} ${gRes.statusText}`);
-        if (!sRes.ok) throw new Error(`Silver history HTTP ${sRes.status} ${sRes.statusText}`);
-
-        const gJson = await gRes.json();
-        const sJson = await sRes.json();
-
-        histGold = parseHistoricalResponse(gJson);
-        histSilver = parseHistoricalResponse(sJson);
-
-        if (!histGold.length) throw new Error("Gold history parsed to 0 points.");
-        if (!histSilver.length) throw new Error("Silver history parsed to 0 points.");
-
-        historyStatus.className = "status ok";
-        historyStatus.textContent = "Historical data updated. Rotating timeframes automatically.";
+        const response = await fetch(API_HISTORY, { cache: "no-cache", signal: AbortSignal.timeout(12000) });
+        if (!response.ok) throw new Error(`History HTTP ${response.status}`);
+        const parsed = parseHistoricalResponse(await response.json());
+        histGold = parsed.gold;
+        histSilver = parsed.silver;
+        const latest = histGold[histGold.length - 1].t;
+        const month = latest.toLocaleDateString(undefined, {month: "long", year: "numeric", timeZone: "UTC"});
+        const stale = Date.now() - latest.getTime() > 100 * 86400000;
+        historyStatus.className = stale ? "status err" : "status ok";
+        historyStatus.textContent = `World Bank monthly averages through ${month}. Historical portfolio uses your current holdings, not past purchases or sales.` +
+          (stale ? " The source has not published recent months; showing the last available history." : "");
         drawHistoricalForCurrentTimeframe();
       } catch (err) {
         historyStatus.className = "status err";
-        historyStatus.textContent = "Historical charts unavailable: the history provider could not be reached or denied the request. Live portfolio values work independently.";
+        historyStatus.textContent = "Unable to refresh monthly history. " + (histGold.length ? "Previously loaded charts remain visible." : "Please try again shortly.");
         drawHistoricalForCurrentTimeframe();
       } finally {
         refreshHistBtn.disabled = false;
