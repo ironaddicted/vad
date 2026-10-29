@@ -4,22 +4,34 @@
     // Google Analytics > Admin > Data streams > Web > Measurement ID.
     const measurementId = 'G-3ZWY4ES6FR';
     const enabled = /^G-[A-Z0-9]+$/.test(measurementId);
+    const path = window.location?.pathname || '/';
+    const service = path.startsWith('/kitchen-remodeling') ? 'kitchen' :
+        path.startsWith('/bathroom-remodeling') ? 'bathroom' : 'general';
     function track(name, parameters = {}) {
         if (!enabled || typeof window.gtag !== 'function') return;
         if (parameters.event_callback) {
             const callback = parameters.event_callback;
             delete parameters.event_callback;
-            window.gtag('event', name, { ...parameters, send_to: measurementId, event_callback: callback });
+            window.gtag('event', name, { service_type: service, ...parameters, send_to: measurementId, event_callback: callback });
         } else {
-            window.gtag('event', name, { ...parameters, send_to: measurementId });
+            window.gtag('event', name, { service_type: service, ...parameters, send_to: measurementId });
         }
     }
     window.vadAnalytics = { track };
     if (!enabled) return;
-    window.gtag('config', measurementId);
+    window.gtag('config', measurementId, { content_group: service });
 
     document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', event => {
+            const phone = event.target.closest('a[href^="tel:"]');
+            const text = event.target.closest('a[href^="sms:"]');
+            if (phone || text) {
+                track(phone ? 'phone_click' : 'sms_click', {
+                    cta_location: (phone || text).closest('.mobile-cta') ? 'mobile-bar' :
+                        (phone || text).closest('nav') ? 'navigation' : 'contact'
+                });
+                return;
+            }
             const categoryButton = event.target.closest('#portfolio .gallery-filters button[data-filter]');
             if (categoryButton) {
                 track('project_category_click', { project_category: categoryButton.dataset.filter });

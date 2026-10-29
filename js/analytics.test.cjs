@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const source = readFileSync(`${__dirname}/analytics.js`, 'utf8');
 const html = readFileSync(`${__dirname}/../index.html`, 'utf8');
 
-function analytics(enabled) {
+function analytics(enabled, path = '/') {
     let now = 0, tick;
     const events = [], handlers = {}, windowHandlers = {};
     const formHandlers = {};
@@ -20,6 +20,7 @@ function analytics(enabled) {
         querySelector: selector => selector === '#mainNav' ? { getBoundingClientRect: () => ({ bottom: 100 }) } : selector === '#contactForm' ? contactForm : null
     };
     const window = {
+        location: { pathname: path },
         innerHeight: 800,
         gtag: (...args) => {
             events.push(args);
@@ -130,3 +131,14 @@ async function form(status, valid = true, networkFailure = false, honeypot = '')
     await form(200, true, false, '   ');
     console.log('PASS: analytics, submission success/failure, duplicate protection, and honeypot blocking without requests or conversions');
 })();
+
+for (const service of ['kitchen', 'bathroom']) {
+    const tracked = analytics(true, `/${service}-remodeling/`);
+    tracked.window.vadAnalytics.track('generate_lead');
+    assert.equal(tracked.events.at(-1)[2].service_type, service);
+    assert.equal(tracked.events[0][2].content_group, service);
+    const phone = { closest: () => null };
+    tracked.handlers.click({ target: { closest: selector => selector === 'a[href^="tel:"]' ? phone : null } });
+    assert.equal(tracked.events.at(-1)[1], 'phone_click');
+    assert.equal(tracked.events.at(-1)[2].service_type, service);
+}
