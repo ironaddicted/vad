@@ -13,7 +13,7 @@
   <header><strong>${name}<br><small>Project assistant</small></strong><button aria-label="Close chat">×</button></header>
   <div class="body"><div class="intro"><p class="message">Ask about your project, service area, planning costs, or getting a quote. This assistant uses approved company answers and cannot confirm appointments.</p><p class="notice">Messages are stored on our private server for up to 30 days. If AI is enabled, OpenAI processes your questions to select an approved answer. Avoid sensitive details. Contact information belongs in the quote form. <a href="/chat-privacy.html" target="_blank" rel="noopener">Chat privacy</a></p><label class="consent"><input type="checkbox">I agree to this use of my chat messages.</label><button class="start" disabled>Start project chat</button></div><div class="messages" role="log" aria-live="polite"></div><div class="topics" hidden></div><p class="error" role="status"></p><p class="ref"></p></div>
   <form class="form" hidden><input aria-label="Your project question" maxlength="600" placeholder="Your project question…" required><button>Send</button></form>
-  <div class="footer"><a class="quote" href="${brand==='qcb'?'/#estimate':'/#contact'}">Request a quote</a><a href="sms:+17047509110">Text / <span>704-750-9110</span></a></div></section>`;
+  <div class="footer"><a class="quote" href="${brand==='qcb'?'/#estimate':'/#contact'}">Request a quote</a><a href="sms:+17046650505">Text / <span>704-665-0505</span></a></div></section>`;
   const $ = s => root.querySelector(s);
   let token = '', reference = '', busy = false; const transcript=[];
   const launcher = $('.launcher'), panel = $('.panel'), form = $('.form'), input = $('.form input');

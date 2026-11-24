@@ -1,27 +1,42 @@
-# VAD Analytics setup
+# Landing-page measurement and form contract
 
-VAD's GA4 measurement ID `G-3ZWY4ES6FR` is configured in `js/analytics.js`. Collection begins when these changes are published. The existing Google Ads tag and successful-submission conversion remain enabled.
+GA4: `G-3ZWY4ES6FR`. Google Ads: `AW-16582460982`. Existing successful-form conversion: `AW-16582460982/cr4VCNeZ2bMZELaMkeM9`.
 
-1. The supplied VAD measurement ID is configured. Confirm the corresponding Web data stream belongs to the VAD website.
-2. Publish the updated website. Use Tag Assistant / GA4 DebugView to verify page views and the events below. Check Realtime with a normal visit as well. Browser blockers can prevent collection.
-3. Under Admin > Custom definitions, create event-scoped dimensions for `section_name`, `cta_location`, `project_category`, and `error_type`. Create a custom metric for `duration_seconds` with unit Seconds.
-4. Mark `generate_lead` as a key event. Link the VAD property to Google Ads if campaign reporting is wanted. The site already records an Ads conversion for the same successful form request: avoid making an imported GA4 lead a second primary Ads conversion for that same action.
+## Events
 
-| Event | Meaning |
-| --- | --- |
-| `estimate_click` | Contact/estimate link clicked, with its placement |
-| `project_category_click` | Project filter clicked, with `project_category`: `all`, `backsplash`, `flooring`, or `renovation`. Counts each click (including repeated selections), not the initial default filter. |
-| `estimate_start` | First form edit per page load |
-| `estimate_submit_attempt` | Valid submission attempt; diagnostic only, not a confirmed lead |
-| `generate_lead` | Backend returned a successful HTTP response |
-| `estimate_error` | Failed server response or network request |
-| `section_view` | Section was dominant in the viewport for about one active second; once per section per page load |
-| `section_engagement` | Approximate active seconds in the dominant visible section, emitted every 15 seconds and on transitions/exit |
+| Event | Trigger | Routing |
+| --- | --- | --- |
+| `generate_lead` | Existing Lambda endpoint returns a successful non-opaque HTTP response; once per accepted form | GA4, plus the existing native Ads form conversion |
+| `click_to_call` | Any `tel:` link click, including dynamically inserted thank-you links and chat shadow-root links | GA4; native Ads conversion only when a verified destination is configured |
+| `click_to_text` | Any `sms:` link click, including chat shadow-root links | GA4; native Ads conversion only when a verified destination is configured |
+| `estimate_start` | First edit of each form, excluding its `website` honeypot | GA4 diagnostic |
+| `estimate_submit_attempt` | Valid request starts | GA4 diagnostic; never a conversion |
+| `estimate_error` | HTTP error, network failure, or timeout | GA4 diagnostic; never a conversion |
+| `estimate_click` | Link to the hero or bottom estimate form | GA4 diagnostic |
+| `section_view`, `section_engagement`, `project_category_click` | Existing visibility/engagement/gallery interactions | Existing GA4 diagnostics retained |
 
-GA4 automatically measures overall engagement time while the page is in focus. Use Engagement reports for site time, and an Exploration grouped by `section_name` with the custom duration metric for section time. Section times are sampled each second, exclude hidden/unfocused tabs and project modals, and are approximate; a rapid close or blocked request may lose a final sample. Seeing a section does not prove someone read it.
+`service_type` distinguishes kitchen, bathroom, and general/home. `form_id` distinguishes `heroEstimateForm` and `contactForm`. Contact clicks include CTA placement. No names, emails, phone values, ZIPs, messages, gclid, or UTM values are added to these custom event parameters. Google tags may independently process advertising and browser identifiers.
 
-No names, email addresses, phone numbers, or project messages are added to custom analytics events. Automatic GA4 form events, if enabled in Enhanced Measurement, are separate from these custom events; use `generate_lead`, not automatic `form_submit`, to count confirmed requests.
+Opening or refreshing the thank-you URL, clicking Submit, failing validation, filling the honeypot, or receiving an unsuccessful response never creates a lead conversion. Pending/completed forms reject duplicate submissions. A 20-second network timeout restores the submit button and shows direct contact options. Navigation is not dependent on an analytics callback: success replaces the form in place.
 
-Before release, verify desktop and mobile estimate links reach the form; invalid forms send no lead; server/network failures allow retry; successful responses record one lead and the existing Ads conversion. Use mocked form responses for development so tests do not send real inquiries. Production collection and GA4 account settings require verification after the ID is configured and the site is published.
+## Contact conversion destinations: release blocker
 
-The contact form includes a CSS-hidden `website` honeypot, excluded from keyboard navigation and assistive technology. Any nonempty value (including whitespace) stops the browser request and displays the usual success message without submission or conversion events. Editing that field does not trigger `estimate_start`. This is a browser-only spam filter: direct requests to the Lambda endpoint bypass it. The backend source is not in this repository, and server-side spam validation has not been verified. Server-side enforcement requires a coordinated request field and backend check before delivering an inquiry; the current payload remains unchanged.
+`js/contact-conversions.js` deliberately contains null destinations until the distinct call and text conversion snippets can be verified. The existing form label is known and used. Separate call/text labels were not present in the repository or saved account audit; the current Brave Ads page did not load sufficiently to verify them. Do not reuse the form label for contact clicks or fabricate labels. GA4 contact events are implemented and browser-tested. Configure the verified `AW-.../label` strings before marking native Ads contact tracking complete.
+
+Keep click actions distinct from confirmed leads: a click does not establish a connected call or sent text. Avoid importing the same GA4 `generate_lead` as another Primary Ads action alongside the existing native form conversion.
+
+## Form payload and attribution
+
+`js/lead-context.js` stores bounded campaign fields in tab session storage and populates hidden inputs in every estimate form: `gclid`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, plus existing `utm_content`, `gbraid`, and `wbraid` support. Values persist across same-origin page navigation; blocked storage falls back to memory.
+
+`js/estimate-forms.js` sends JSON to the existing Lambda URL with the existing name/phone/email/message fields, plus `source=vad`, `service`, `form_id`, `zip`, empty `website`, and captured campaign fields. ZIP and a readable campaign summary are also included in `message` so existing email formatting can retain the context even if it ignores unknown top-level fields. Email is optional and sent as an empty string when omitted.
+
+A clearly marked QA request with blank email, ZIP, and campaign fields returned HTTP 200 on November 23, 2026. No advertising events were sent for that direct endpoint test. This verifies request acceptance, not receipt of the notification email; the owner should confirm the labeled test arrived with ZIP and attribution intact. Backend implementation is not in this repository.
+
+Each form retains a hidden `website` honeypot excluded from accessibility/keyboard navigation. Nonempty values, including whitespace, show success without network requests or conversion events. This remains a browser-side filter; server-side enforcement has not been verified.
+
+## Checks
+
+Run `node js/analytics.test.cjs`. Run `scripts/conversion-qa.cjs` against a local HTTP preview with Playwright available (`VAD_PLAYWRIGHT_MODULE`, `VAD_BROWSER_PATH`, optional `VAD_QA_URL` and `VAD_QA_OUTPUT`). It intercepts all inquiry requests and measurement SDKs: five forms, all required attribution, success-only events, validation, duplicates, retries, honeypots, contact clicks including the chat shadow tree, schema/FAQ sync, and layouts at 375/768/1280px.
+
+Account-side verification in GA4 DebugView / Tag Assistant remains required after deployment and destination configuration. Browser queue assertions are not a substitute for confirming account receipt. During production verification, do not submit fabricated advertising conversions merely to test a tag; use the tool's diagnostic flow and a genuine authorized lead for final success verification.

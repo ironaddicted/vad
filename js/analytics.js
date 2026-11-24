@@ -20,19 +20,33 @@
             window.gtag('event', name, { service_type: service, ...parameters, send_to: measurementId });
         }
     }
-    window.vadAnalytics = { track };
+    const adsId = 'AW-16582460982';
+    const leadDestination = adsId + '/cr4VCNeZ2bMZELaMkeM9';
+    function ads(name, destination) {
+        if (typeof window.gtag !== 'function') return;
+        window.gtag('event', 'conversion', { send_to: destination, event_category: name });
+    }
+    window.vadAnalytics = { track, leadSuccess(formId) {
+        track('generate_lead', { form_id: formId });
+        ads('generate_lead', leadDestination);
+    } };
     if (!enabled) return;
     window.gtag('config', measurementId, { content_group: service });
 
     document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', event => {
-            const phone = event.target.closest('a[href^="tel:"]');
-            const text = event.target.closest('a[href^="sms:"]');
+            const origin = event.composedPath?.().find(el => el.matches?.('a[href^="tel:"],a[href^="sms:"]')) || event.target;
+            const phone = origin.closest('a[href^="tel:"]');
+            const text = origin.closest('a[href^="sms:"]');
             if (phone || text) {
-                track(phone ? 'phone_click' : 'sms_click', {
-                    cta_location: (phone || text).closest('.mobile-cta') ? 'mobile-bar' :
+                const name = phone ? 'click_to_call' : 'click_to_text';
+                track(name, {
+                    cta_location: (phone || text).closest('[data-cta-location]')?.dataset.ctaLocation || ((phone || text).closest('.mobile-cta') ? 'mobile-bar' :
                         (phone || text).closest('nav') ? 'navigation' : 'contact'
+                    )
                 });
+                const destination = window.vadContactConversionDestinations?.[name];
+                if (destination) ads(name, destination);
                 return;
             }
             const categoryButton = event.target.closest('#portfolio .gallery-filters button[data-filter]');
@@ -40,20 +54,14 @@
                 track('project_category_click', { project_category: categoryButton.dataset.filter });
                 return;
             }
-            const link = event.target.closest('a[href="#contact"]');
+            const link = event.target.closest('a[href="#contact"],a[href="#heroEstimateForm"]');
             if (!link) return;
             track('estimate_click', {
                 cta_location: link.dataset.ctaLocation ||
                     (link.closest('.modal') ? 'project' : link.closest('nav') ? 'navigation' : 'portfolio')
             });
         });
-        const contactForm = document.querySelector('#contactForm');
-        function trackFormStart(event) {
-            if (event.target.id === 'website') return;
-            track('estimate_start');
-            contactForm.removeEventListener('input', trackFormStart);
-        }
-        contactForm?.addEventListener('input', trackFormStart);
+        // Per-form lifecycle events are owned by estimate-forms.js.
 
         // Attribute active time to the section occupying the largest visible area.
         // This also works for sections taller than the viewport, such as the gallery.
