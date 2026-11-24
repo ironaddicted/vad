@@ -1,0 +1,130 @@
+{
+  "date": "2026-11-23",
+  "deployment": "draft PR; not deployed",
+  "functional": {
+    "passed": true,
+    "layouts": [
+      {
+        "route": "/kitchen-remodeling/",
+        "layouts": [
+          375,
+          768,
+          1280
+        ],
+        "touch": true
+      },
+      {
+        "route": "/bathroom-remodeling/",
+        "layouts": [
+          375,
+          768,
+          1280
+        ],
+        "touch": true
+      },
+      {
+        "route": "/",
+        "layouts": [
+          375,
+          768,
+          1280
+        ],
+        "touch": true
+      }
+    ],
+    "forms": 5,
+    "backend": "mocked; no actual inquiry sent",
+    "runtimeErrors": []
+  },
+  "backend": {
+    "status": 200,
+    "ok": true,
+    "response": "200",
+    "email": "empty",
+    "zip": true,
+    "tracking": true,
+    "adsEvents": false
+  },
+  "lighthouse": {
+    "kitchen": {
+      "baselineMedian": {
+        "runs": [
+          {
+            "performance": 100,
+            "accessibility": 100,
+            "LCP": 1532.7575000000002
+          },
+          {
+            "performance": 99,
+            "accessibility": 100,
+            "LCP": 1532.545
+          },
+          {
+            "performance": 100,
+            "accessibility": 100,
+            "LCP": 1563.414
+          }
+        ],
+        "performance": 100,
+        "accessibility": 100
+      },
+      "finalSingleRun": {
+        "performance": 100,
+        "accessibility": 100,
+        "LCP": 1532.856
+      },
+      "version": "12.8.2"
+    },
+    "bathroom": {
+      "baselineMedian": {
+        "runs": [
+          {
+            "performance": 99,
+            "accessibility": 100,
+            "LCP": 1532.596
+          },
+          {
+            "performance": 100,
+            "accessibility": 100,
+            "LCP": 1532.3609999999999
+          },
+          {
+            "performance": 100,
+            "accessibility": 100,
+            "LCP": 1532.319
+          }
+        ],
+        "performance": 100,
+        "accessibility": 100
+      },
+      "finalSingleRun": {
+        "performance": 100,
+        "accessibility": 100,
+        "LCP": 1533.156
+      },
+      "version": "12.8.2"
+    },
+    "method": "Baseline median of three local mobile runs; one final local mobile run per page after refinements. Google measurement SDK request blocked. Not a live-hosting or account-side test."
+  },
+  "unresolved": [
+    "[[TODO: BATH_PRICE_RANGE]]",
+    "[[TODO: BATH_TIMELINE]]",
+    "[[TODO: DIFFERENTIATORS]]",
+    "[[TODO: GOOGLE_RATING]]",
+    "[[TODO: GOOGLE_REVIEW_COUNT]]",
+    "[[TODO: KITCHEN_PRICE_RANGE]]",
+    "[[TODO: KITCHEN_TIMELINE]]",
+    "[[TODO: QUOTE_TURNAROUND]]",
+    "[[TODO: TWO_ADDITIONAL_VERIFIED_BATHROOM_REVIEWS]]",
+    "[[TODO: VERIFIED_ADS_CALL_DESTINATION]]",
+    "[[TODO: VERIFIED_ADS_TEXT_DESTINATION]]",
+    "[[TODO: YEARS]]"
+  ],
+  "outstanding": [
+    "Distinct Ads call/text labels",
+    "Account receipt in GA4 DebugView / Tag Assistant",
+    "Two more verified bathroom reviews",
+    "Owner confirmation of backend test notification and QCB new-tab link",
+    "Reconcile existing local/server edits before deployment; sync separate VAD chat backend contact facts"
+  ]
+}

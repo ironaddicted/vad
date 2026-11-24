@@ -1,0 +1,130 @@
+{
+  "1.jpg": {
+    "width": 1215,
+    "height": 911
+  },
+  "1.webp": {
+    "width": 1215,
+    "height": 911
+  },
+  "2.jpg": {
+    "width": 683,
+    "height": 911
+  },
+  "3.jpg": {
+    "width": 3024,
+    "height": 4032
+  },
+  "3.webp": {
+    "width": 1200,
+    "height": 1600
+  },
+  "4.jpg": {
+    "width": 683,
+    "height": 911
+  },
+  "4.webp": {
+    "width": 683,
+    "height": 911
+  },
+  "5.jpg": {
+    "width": 4032,
+    "height": 3024
+  },
+  "6.jpg": {
+    "width": 960,
+    "height": 1280
+  },
+  "7.webp": {
+    "width": 640,
+    "height": 480
+  },
+  "bathroom-blue-vanity.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "bathroom-dark-vanity.webp": {
+    "width": 718,
+    "height": 957
+  },
+  "bathroom-gray-glass-shower.webp": {
+    "width": 718,
+    "height": 957
+  },
+  "bathroom-gray-shower-glass.webp": {
+    "width": 718,
+    "height": 957
+  },
+  "bathroom-gray-shower-niche.webp": {
+    "width": 718,
+    "height": 957
+  },
+  "bathroom-gray-tile-walk-in.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "bathroom-gray-tub.webp": {
+    "width": 1400,
+    "height": 1050
+  },
+  "bathroom-gray-walls-tub.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "bathroom-marble-shower.webp": {
+    "width": 1600,
+    "height": 1200
+  },
+  "bathroom-mosaic-floor-detail.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "bathroom-subway-shower.webp": {
+    "width": 1050,
+    "height": 1400
+  },
+  "bathroom-tall-tile-shower.webp": {
+    "width": 718,
+    "height": 957
+  },
+  "kitchen-blue-cabinets.webp": {
+    "width": 1320,
+    "height": 741
+  },
+  "kitchen-dark-cabinets-island.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "kitchen-gray-cabinets-mosaic.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "kitchen-gray-cabinets-wide.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "kitchen-green-backsplash.webp": {
+    "width": 1276,
+    "height": 957
+  },
+  "office-flooring-detail.webp": {
+    "width": 1024,
+    "height": 710
+  },
+  "office-flooring.webp": {
+    "width": 1024,
+    "height": 713
+  },
+  "porcelain-backsplash-detail.webp": {
+    "width": 960,
+    "height": 1280
+  },
+  "porcelain-backsplash.webp": {
+    "width": 960,
+    "height": 1280
+  },
+  "white-subway-backsplash.webp": {
+    "width": 1920,
+    "height": 1440
+  }
+}
